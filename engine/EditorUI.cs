@@ -16,6 +16,10 @@ namespace wraithspire.engine
         private Primitive? _selectedObject = null;
 
         public Action? OnCreateCube { get; set; }
+        public Action? OnCreateSphere { get; set; }
+        public Action? OnCreateCapsule { get; set; }
+        public Action? OnCreateCylinder { get; set; }
+        public Action? OnCreatePlane { get; set; }
         public List<Primitive> SceneObjects { get; set; } = new List<Primitive>();
 
         public Matrix4 CameraView => _camera.View;
@@ -97,6 +101,22 @@ namespace wraithspire.engine
                         if (ImGui.MenuItem("Cube"))
                         {
                             OnCreateCube?.Invoke();
+                        }
+                        if (ImGui.MenuItem("Sphere"))
+                        {
+                            OnCreateSphere?.Invoke();
+                        }
+                        if (ImGui.MenuItem("Capsule"))
+                        {
+                            OnCreateCapsule?.Invoke();
+                        }
+                        if (ImGui.MenuItem("Cylinder"))
+                        {
+                            OnCreateCylinder?.Invoke();
+                        }
+                        if (ImGui.MenuItem("Plane"))
+                        {
+                            OnCreatePlane?.Invoke();
                         }
                         ImGui.EndMenu();
                     }

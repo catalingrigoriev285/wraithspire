@@ -16,6 +16,11 @@ namespace wraithspire.engine
         private EditorUI? _editorUI;
         private List<Primitive> _sceneObjects = new List<Primitive>();
         private int _cubeCounter = 0;
+        private int _sphereCounter = 0;
+        private int _capsuleCounter = 0;
+        private int _cylinderCounter = 0;
+        private int _planeCounter = 0;
+        private int _spawnCounter = 0;
 
         public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
         {
@@ -47,6 +52,10 @@ namespace wraithspire.engine
             _editorUI = new EditorUI();
             _editorUI.SceneObjects = _sceneObjects;
             _editorUI.OnCreateCube = CreateCube;
+            _editorUI.OnCreateSphere = CreateSphere;
+            _editorUI.OnCreateCapsule = CreateCapsule;
+            _editorUI.OnCreateCylinder = CreateCylinder;
+            _editorUI.OnCreatePlane = CreatePlane;
             _terrain = new objects.CheckboardTerrain();
             _terrain.Initialize();
         }
@@ -117,9 +126,69 @@ namespace wraithspire.engine
             _cubeCounter++;
             
             var cube = new Cube(name);
-            cube.Position = new Vector3(0f, 1f, 0f); // Place above ground
+            cube.Position = GetNextSpawnPosition();
             cube.Initialize();
             _sceneObjects.Add(cube);
+        }
+
+        private void CreateSphere()
+        {
+            string name = _sphereCounter == 0 ? "Sphere" : $"Sphere ({_sphereCounter})";
+            _sphereCounter++;
+
+            var sphere = new Sphere(name);
+            sphere.Position = GetNextSpawnPosition();
+            sphere.Initialize();
+            _sceneObjects.Add(sphere);
+        }
+
+        private void CreateCapsule()
+        {
+            string name = _capsuleCounter == 0 ? "Capsule" : $"Capsule ({_capsuleCounter})";
+            _capsuleCounter++;
+
+            var capsule = new Capsule(name);
+            capsule.Position = GetNextSpawnPosition();
+            capsule.Initialize();
+            _sceneObjects.Add(capsule);
+        }
+
+        private void CreateCylinder()
+        {
+            string name = _cylinderCounter == 0 ? "Cylinder" : $"Cylinder ({_cylinderCounter})";
+            _cylinderCounter++;
+
+            var cylinder = new Cylinder(name);
+            cylinder.Position = GetNextSpawnPosition();
+            cylinder.Initialize();
+            _sceneObjects.Add(cylinder);
+        }
+
+        private void CreatePlane()
+        {
+            string name = _planeCounter == 0 ? "Plane" : $"Plane ({_planeCounter})";
+            _planeCounter++;
+
+            var plane = new Plane(name);
+            plane.Position = GetNextSpawnPosition();
+            plane.Initialize();
+            _sceneObjects.Add(plane);
+        }
+
+        private Vector3 GetNextSpawnPosition()
+        {
+            // Simple grid spawn pattern so newly created objects don't overlap.
+            const float spacing = 2.0f;
+            const int cols = 6;
+
+            int i = _spawnCounter++;
+            int x = i % cols;
+            int z = i / cols;
+
+            float worldX = (x - (cols - 1) * 0.5f) * spacing;
+            float worldZ = z * spacing;
+            float worldY = 1f; // above ground
+            return new Vector3(worldX, worldY, worldZ);
         }
 
         public void Run()
