@@ -34,11 +34,11 @@ namespace wraithspire.engine.subsystems
             ImGui.CreateContext();
             var io = ImGui.GetIO();
             io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
-            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 
             ImGui.StyleColorsDark();
             io.FontGlobalScale = 1.20f;
+            ApplyModernStyle();
 
             CreateDeviceResources();
             SetPerFrameImGuiData(1f / 60f);
@@ -55,6 +55,65 @@ namespace wraithspire.engine.subsystems
         {
             ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData());
+        }
+
+        private static void ApplyModernStyle()
+        {
+            var style = ImGui.GetStyle();
+            style.WindowRounding = 8f;
+            style.FrameRounding = 6f;
+            style.PopupRounding = 6f;
+            style.ChildRounding = 6f;
+            style.ScrollbarRounding = 6f;
+            style.GrabRounding = 6f;
+            style.TabRounding = 6f;
+
+            style.WindowBorderSize = 1f;
+            style.FrameBorderSize = 1f;
+            style.PopupBorderSize = 1f;
+
+            style.WindowPadding = new System.Numerics.Vector2(10, 10);
+            style.FramePadding = new System.Numerics.Vector2(10, 8);
+            style.ItemSpacing = new System.Numerics.Vector2(8, 6);
+            style.ItemInnerSpacing = new System.Numerics.Vector2(6, 6);
+            style.IndentSpacing = 18f;
+
+            var colors = style.Colors;
+            // Modern slate palette with accent
+            colors[(int)ImGuiCol.Text] = new System.Numerics.Vector4(0.95f, 0.96f, 0.98f, 1.00f);
+            colors[(int)ImGuiCol.TextDisabled] = new System.Numerics.Vector4(0.60f, 0.62f, 0.65f, 1.00f);
+            colors[(int)ImGuiCol.WindowBg] = new System.Numerics.Vector4(0.10f, 0.12f, 0.15f, 1.00f);
+            colors[(int)ImGuiCol.ChildBg] = new System.Numerics.Vector4(0.12f, 0.14f, 0.18f, 1.00f);
+            colors[(int)ImGuiCol.PopupBg] = new System.Numerics.Vector4(0.12f, 0.14f, 0.18f, 0.98f);
+            colors[(int)ImGuiCol.Border] = new System.Numerics.Vector4(0.22f, 0.26f, 0.30f, 1.00f);
+            colors[(int)ImGuiCol.BorderShadow] = new System.Numerics.Vector4(0.08f, 0.10f, 0.12f, 0.50f);
+            colors[(int)ImGuiCol.FrameBg] = new System.Numerics.Vector4(0.16f, 0.18f, 0.22f, 1.00f);
+            colors[(int)ImGuiCol.FrameBgHovered] = new System.Numerics.Vector4(0.20f, 0.24f, 0.28f, 1.00f);
+            colors[(int)ImGuiCol.FrameBgActive] = new System.Numerics.Vector4(0.22f, 0.26f, 0.30f, 1.00f);
+            colors[(int)ImGuiCol.TitleBg] = new System.Numerics.Vector4(0.10f, 0.12f, 0.15f, 1.00f);
+            colors[(int)ImGuiCol.TitleBgActive] = new System.Numerics.Vector4(0.12f, 0.14f, 0.18f, 1.00f);
+            colors[(int)ImGuiCol.TitleBgCollapsed] = new System.Numerics.Vector4(0.08f, 0.09f, 0.10f, 1.00f);
+            colors[(int)ImGuiCol.MenuBarBg] = new System.Numerics.Vector4(0.12f, 0.14f, 0.18f, 1.00f);
+            colors[(int)ImGuiCol.ScrollbarBg] = new System.Numerics.Vector4(0.10f, 0.12f, 0.15f, 1.00f);
+            colors[(int)ImGuiCol.ScrollbarGrab] = new System.Numerics.Vector4(0.26f, 0.30f, 0.34f, 1.00f);
+            colors[(int)ImGuiCol.ScrollbarGrabHovered] = new System.Numerics.Vector4(0.30f, 0.34f, 0.38f, 1.00f);
+            colors[(int)ImGuiCol.ScrollbarGrabActive] = new System.Numerics.Vector4(0.34f, 0.38f, 0.42f, 1.00f);
+            colors[(int)ImGuiCol.CheckMark] = new System.Numerics.Vector4(0.53f, 0.79f, 0.98f, 1.00f);
+            colors[(int)ImGuiCol.SliderGrab] = new System.Numerics.Vector4(0.45f, 0.70f, 0.95f, 1.00f);
+            colors[(int)ImGuiCol.SliderGrabActive] = new System.Numerics.Vector4(0.53f, 0.79f, 0.98f, 1.00f);
+            colors[(int)ImGuiCol.Button] = new System.Numerics.Vector4(0.18f, 0.20f, 0.24f, 1.00f);
+            colors[(int)ImGuiCol.ButtonHovered] = new System.Numerics.Vector4(0.25f, 0.29f, 0.33f, 1.00f);
+            colors[(int)ImGuiCol.ButtonActive] = new System.Numerics.Vector4(0.31f, 0.35f, 0.39f, 1.00f);
+            colors[(int)ImGuiCol.Header] = new System.Numerics.Vector4(0.18f, 0.20f, 0.24f, 1.00f);
+            colors[(int)ImGuiCol.HeaderHovered] = new System.Numerics.Vector4(0.25f, 0.29f, 0.33f, 1.00f);
+            colors[(int)ImGuiCol.HeaderActive] = new System.Numerics.Vector4(0.31f, 0.35f, 0.39f, 1.00f);
+            colors[(int)ImGuiCol.Separator] = new System.Numerics.Vector4(0.22f, 0.26f, 0.30f, 1.00f);
+            colors[(int)ImGuiCol.SeparatorHovered] = new System.Numerics.Vector4(0.30f, 0.34f, 0.38f, 1.00f);
+            colors[(int)ImGuiCol.SeparatorActive] = new System.Numerics.Vector4(0.34f, 0.38f, 0.42f, 1.00f);
+            colors[(int)ImGuiCol.ResizeGrip] = new System.Numerics.Vector4(0.26f, 0.30f, 0.34f, 0.50f);
+            colors[(int)ImGuiCol.ResizeGripHovered] = new System.Numerics.Vector4(0.30f, 0.34f, 0.38f, 0.67f);
+            colors[(int)ImGuiCol.ResizeGripActive] = new System.Numerics.Vector4(0.34f, 0.38f, 0.42f, 0.95f);
+            // Tab colors are not available in older ImGui builds; skip if enum members are missing.
         }
 
         public void WindowResized(int width, int height)

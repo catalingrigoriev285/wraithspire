@@ -11,7 +11,6 @@ namespace wraithspire.engine
     {
         private readonly GameWindow _window;
         private ImGuiController? _imgui;
-        private bool _layoutInitialized;
         private bool _isPlaying;
         private bool _isPaused;
 
@@ -67,17 +66,17 @@ namespace wraithspire.engine
             float width = _window.ClientSize.X;
             float height = _window.ClientSize.Y;
 
+            float topMargin = 0f;
             float leftWidth = MathF.Round(width * 0.20f);
             float rightWidth = MathF.Round(width * 0.25f);
             float bottomHeight = MathF.Round(height * 0.30f);
             float centerWidth = width - leftWidth - rightWidth;
-            float centerHeight = height - bottomHeight;
+            float centerHeight = height - bottomHeight - topMargin;
 
             // Toolbar at top of center area
-            float toolbarHeight = 40f;
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth, 0));
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(centerWidth, toolbarHeight));
-            if (ImGui.Begin("Toolbar", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse))
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth, topMargin), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(centerWidth, 100f), ImGuiCond.Always);
+            if (ImGui.Begin("Toolbar", ImGuiWindowFlags.None))
             {
                 if (ImGui.Button(_isPlaying ? "Stop" : "Play"))
                 {
@@ -96,9 +95,9 @@ namespace wraithspire.engine
             ImGui.End();
 
             // Hierarchy panel
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, 0));
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(leftWidth, height));
-            if (ImGui.Begin("Hierarchy"))
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(leftWidth, centerHeight), ImGuiCond.Always);
+            if (ImGui.Begin("Hierarchy", ImGuiWindowFlags.None))
             {
                 ImGui.Text("Scene Hierarchy");
                 ImGui.Separator();
@@ -114,9 +113,9 @@ namespace wraithspire.engine
             ImGui.End();
 
             // Project panel
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth, centerHeight));
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(centerWidth, bottomHeight));
-            if (ImGui.Begin("Project"))
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin + centerHeight), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(width, bottomHeight), ImGuiCond.Always);
+            if (ImGui.Begin("Project", ImGuiWindowFlags.None))
             {
                 ImGui.Text("Project Files");
                 ImGui.Separator();
@@ -144,9 +143,9 @@ namespace wraithspire.engine
             ImGui.End();
 
             // Inspector panel
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth + centerWidth, 0));
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(rightWidth, height));
-            if (ImGui.Begin("Inspector"))
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth + centerWidth, topMargin), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(rightWidth, centerHeight), ImGuiCond.Always);
+            if (ImGui.Begin("Inspector", ImGuiWindowFlags.None))
             {
                 ImGui.Text("Inspector");
                 ImGui.Separator();

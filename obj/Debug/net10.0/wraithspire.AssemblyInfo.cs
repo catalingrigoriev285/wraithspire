@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("wraithspire")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e50645ef39267ee169c931a0ae897e6ed2f49e7b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c5c4b9ea3a1ad1970204858fa6b03f87a8d3294c")]
 [assembly: System.Reflection.AssemblyProductAttribute("wraithspire")]
 [assembly: System.Reflection.AssemblyTitleAttribute("wraithspire")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

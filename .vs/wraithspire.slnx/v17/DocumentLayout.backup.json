@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\subsystems\\imguicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\subsystems\\imguicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\window.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\window.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\subsystems\\imguicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\subsystems\\imguicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -22,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -30,26 +30,26 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "ImGuiController.cs",
               "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\subsystems\\ImGuiController.cs",
               "RelativeDocumentMoniker": "engine\\subsystems\\ImGuiController.cs",
               "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\subsystems\\ImGuiController.cs",
               "RelativeToolTip": "engine\\subsystems\\ImGuiController.cs",
-              "ViewState": "AgIAABoAAAAAAAAAAIAwwAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAGcAAAAAAAAAAIAwwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-02T14:23:10.058Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Window.cs",
               "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\Window.cs",
               "RelativeDocumentMoniker": "engine\\Window.cs",
               "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\Window.cs",
               "RelativeToolTip": "engine\\Window.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAAAABsAAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAawFkAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-02T14:20:07.994Z",
               "EditorCaption": ""
