@@ -77,6 +77,7 @@ namespace wraithspire.engine
         private void RenderTerrain()
         {
             if (_terrain == null) return;
+            if (_editorUI == null) return;
 
             // Compute center viewport below toolbar using same layout values
             float width = _window.ClientSize.X;
@@ -89,9 +90,10 @@ namespace wraithspire.engine
             float centerHeight = height - bottomHeight - topMargin;
             int viewportWidth = (int)centerWidth;
             int viewportHeight = (int)(centerHeight - 100f); // subtract toolbar height
-
             GL.Enable(EnableCap.DepthTest);
-            _terrain.Render(viewportWidth, viewportHeight);
+            var proj = _editorUI.CameraProjection;
+            var view = _editorUI.CameraView;
+            _terrain.Render(proj, view);
         }
 
         public void Run()

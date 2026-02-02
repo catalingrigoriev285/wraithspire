@@ -1,6 +1,8 @@
 using System;
 using ImGuiNET;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace wraithspire.engine
 {
@@ -12,6 +14,10 @@ namespace wraithspire.engine
         private System.Numerics.Vector3 _inspectorPos = new System.Numerics.Vector3(0, 0, 0);
         private System.Numerics.Vector3 _inspectorRot = new System.Numerics.Vector3(0, 0, 0);
         private System.Numerics.Vector3 _inspectorScale = new System.Numerics.Vector3(1, 1, 1);
+        private Camera _camera = new Camera();
+
+        public Matrix4 CameraView => _camera.View;
+        public Matrix4 CameraProjection => _camera.Projection;
 
         public void Render(GameWindow window)
         {
@@ -43,6 +49,8 @@ namespace wraithspire.engine
                 }
                 ImGui.SameLine();
                 ImGui.Text(_isPlaying ? (_isPaused ? "Paused" : "Playing") : "Stopped");
+                // Update camera controls using window input
+                _camera.Update(window, (int)centerWidth, (int)(centerHeight - 100f));
             }
             ImGui.End();
 
@@ -60,6 +68,7 @@ namespace wraithspire.engine
                     ImGui.PushID("Player"); ImGui.BulletText("Player"); ImGui.PopID();
                     ImGui.TreePop();
                 }
+
             }
             ImGui.End();
 

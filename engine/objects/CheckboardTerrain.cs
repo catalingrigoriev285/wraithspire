@@ -99,14 +99,11 @@ namespace wraithspire.engine.objects
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
         }
 
-        public void Render(int viewportWidth, int viewportHeight)
+        public void Render(Matrix4 proj, Matrix4 view)
         {
             if (_vao == 0) return;
 
             GL.UseProgram(_shader);
-            // Simple camera looking down the XZ plane
-            var proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60f), viewportWidth / (float)viewportHeight, 0.1f, 2000f);
-            var view = Matrix4.LookAt(new Vector3(0f, 20f, 25f), Vector3.Zero, Vector3.UnitY);
             var model = Matrix4.Identity;
             GL.UniformMatrix4(_projLoc, false, ref proj);
             GL.UniformMatrix4(_viewLoc, false, ref view);
