@@ -4,6 +4,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using ImGuiNET;
+using System.IO;
 
 namespace wraithspire.engine.subsystems
 {
@@ -33,9 +34,11 @@ namespace wraithspire.engine.subsystems
             ImGui.CreateContext();
             var io = ImGui.GetIO();
             io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 
             ImGui.StyleColorsDark();
+            io.FontGlobalScale = 1.20f;
 
             CreateDeviceResources();
             SetPerFrameImGuiData(1f / 60f);
@@ -213,7 +216,33 @@ namespace wraithspire.engine.subsystems
         private void CreateFontTexture()
         {
             var io = ImGui.GetIO();
-            io.Fonts.AddFontDefault();
+            // Try to load a clear system font (Windows)
+            bool customFontLoaded = false;
+            try
+            {
+                string[] candidates = new[]
+                {
+                    @"C:\\Windows\\Fonts\\verdana.ttf",
+                    @"C:\\Windows\\Fonts\\arial.ttf",
+                    @"C:\\Windows\\Fonts\\segoeui.ttf"
+                };
+                foreach (var path in candidates)
+                {
+                    if (File.Exists(path))
+                    {
+                        io.Fonts.Clear();
+                        io.Fonts.AddFontFromFileTTF(path, 18f);
+                        customFontLoaded = true;
+                        break;
+                    }
+                }
+            }
+            catch { /* fall back to default */ }
+
+            if (!customFontLoaded)
+            {
+                io.Fonts.AddFontDefault();
+            }
             io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height, out int bytesPerPixel);
 
             _fontTexture = GL.GenTexture();
