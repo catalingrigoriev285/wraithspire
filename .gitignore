@@ -1,0 +1,36 @@
+# Build outputs
+bin/
+obj/
+
+# Visual Studio / VS Code
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider/JetBrains
+.idea/
+*.sln.iml
+
+# NuGet
+**/packages/
+*.nupkg
+# Generated files
+*.generated.cs
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Temporary
+*.tmp
+*.temp
+~$*
+/obj
+/bin
+/.vs
+/obj
