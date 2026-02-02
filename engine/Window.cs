@@ -11,6 +11,7 @@ namespace wraithspire.engine
     {
         private readonly GameWindow _window;
         private ImGuiController? _imgui;
+        private objects.CheckboardTerrain? _terrain;
         private EditorUI? _editorUI;
 
         public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
@@ -41,6 +42,8 @@ namespace wraithspire.engine
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
             _imgui = new ImGuiController(_window);
             _editorUI = new EditorUI();
+            _terrain = new objects.CheckboardTerrain();
+            _terrain.Initialize();
         }
 
         private void OnUpdateFrame(FrameEventArgs args)
@@ -53,13 +56,12 @@ namespace wraithspire.engine
             GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            RenderTerrain();
             _editorUI?.Render(_window);
 
             _imgui?.Render();
             _window.SwapBuffers();
         }
-
-        
 
         private void OnResize(ResizeEventArgs size)
         {
@@ -69,6 +71,27 @@ namespace wraithspire.engine
         private void OnUnload()
         {
             _imgui?.Dispose();
+            _terrain?.Dispose();
+        }
+
+        private void RenderTerrain()
+        {
+            if (_terrain == null) return;
+
+            // Compute center viewport below toolbar using same layout values
+            float width = _window.ClientSize.X;
+            float height = _window.ClientSize.Y;
+            float topMargin = 0f;
+            float leftWidth = MathF.Round(width * 0.20f);
+            float rightWidth = MathF.Round(width * 0.25f);
+            float bottomHeight = MathF.Round(height * 0.30f);
+            float centerWidth = width - leftWidth - rightWidth;
+            float centerHeight = height - bottomHeight - topMargin;
+            int viewportWidth = (int)centerWidth;
+            int viewportHeight = (int)(centerHeight - 100f); // subtract toolbar height
+
+            GL.Enable(EnableCap.DepthTest);
+            _terrain.Render(viewportWidth, viewportHeight);
         }
 
         public void Run()
