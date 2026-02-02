@@ -3,6 +3,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using wraithspire.engine.subsystems;
+using wraithspire.engine.objects.primitives;
 using ImGuiNET;
 
 namespace wraithspire.engine
@@ -13,6 +14,8 @@ namespace wraithspire.engine
         private ImGuiController? _imgui;
         private objects.CheckboardTerrain? _terrain;
         private EditorUI? _editorUI;
+        private List<Primitive> _sceneObjects = new List<Primitive>();
+        private int _cubeCounter = 0;
 
         public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
         {
@@ -42,6 +45,8 @@ namespace wraithspire.engine
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
             _imgui = new ImGuiController(_window);
             _editorUI = new EditorUI();
+            _editorUI.SceneObjects = _sceneObjects;
+            _editorUI.OnCreateCube = CreateCube;
             _terrain = new objects.CheckboardTerrain();
             _terrain.Initialize();
         }
@@ -56,7 +61,7 @@ namespace wraithspire.engine
             GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            RenderTerrain();
+            RenderScene();
             _editorUI?.Render(_window);
 
             _imgui?.Render();
@@ -72,9 +77,13 @@ namespace wraithspire.engine
         {
             _imgui?.Dispose();
             _terrain?.Dispose();
+            foreach (var obj in _sceneObjects)
+            {
+                obj.Dispose();
+            }
         }
 
-        private void RenderTerrain()
+        private void RenderScene()
         {
             if (_terrain == null) return;
             if (_editorUI == null) return;
@@ -94,6 +103,23 @@ namespace wraithspire.engine
             var proj = _editorUI.CameraProjection;
             var view = _editorUI.CameraView;
             _terrain.Render(proj, view);
+            
+            // Render all scene objects
+            foreach (var obj in _sceneObjects)
+            {
+                obj.Render(proj, view);
+            }
+        }
+
+        private void CreateCube()
+        {
+            string name = _cubeCounter == 0 ? "Cube" : $"Cube ({_cubeCounter})";
+            _cubeCounter++;
+            
+            var cube = new Cube(name);
+            cube.Position = new Vector3(0f, 1f, 0f); // Place above ground
+            cube.Initialize();
+            _sceneObjects.Add(cube);
         }
 
         public void Run()

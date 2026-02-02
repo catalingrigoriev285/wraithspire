@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using ImGuiNET;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using wraithspire.engine.objects.primitives;
 
 namespace wraithspire.engine
 {
@@ -10,11 +12,11 @@ namespace wraithspire.engine
     {
         private bool _isPlaying;
         private bool _isPaused;
-        private string _inspectorName = "Player";
-        private System.Numerics.Vector3 _inspectorPos = new System.Numerics.Vector3(0, 0, 0);
-        private System.Numerics.Vector3 _inspectorRot = new System.Numerics.Vector3(0, 0, 0);
-        private System.Numerics.Vector3 _inspectorScale = new System.Numerics.Vector3(1, 1, 1);
         private Camera _camera = new Camera();
+        private Primitive? _selectedObject = null;
+
+        public Action? OnCreateCube { get; set; }
+        public List<Primitive> SceneObjects { get; set; } = new List<Primitive>();
 
         public Matrix4 CameraView => _camera.View;
         public Matrix4 CameraProjection => _camera.Projection;
@@ -65,10 +67,41 @@ namespace wraithspire.engine
                 {
                     ImGui.PushID("Camera"); ImGui.BulletText("Camera"); ImGui.PopID();
                     ImGui.PushID("DirectionalLight"); ImGui.BulletText("Directional Light"); ImGui.PopID();
-                    ImGui.PushID("Player"); ImGui.BulletText("Player"); ImGui.PopID();
+                    
+                    // Display scene objects
+                    for (int i = 0; i < SceneObjects.Count; i++)
+                    {
+                        var obj = SceneObjects[i];
+                        ImGui.PushID(i);
+                        bool isSelected = (_selectedObject == obj);
+                        if (ImGui.Selectable(obj.Name, isSelected))
+                        {
+                            _selectedObject = obj;
+                        }
+                        ImGui.PopID();
+                    }
+                    
                     ImGui.TreePop();
                 }
 
+                // Right-click context menu
+                if (ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+                {
+                    ImGui.OpenPopup("HierarchyContext");
+                }
+
+                if (ImGui.BeginPopup("HierarchyContext"))
+                {
+                    if (ImGui.BeginMenu("Objects"))
+                    {
+                        if (ImGui.MenuItem("Cube"))
+                        {
+                            OnCreateCube?.Invoke();
+                        }
+                        ImGui.EndMenu();
+                    }
+                    ImGui.EndPopup();
+                }
             }
             ImGui.End();
 
@@ -109,11 +142,33 @@ namespace wraithspire.engine
             {
                 ImGui.Text("Inspector");
                 ImGui.Separator();
-                ImGui.Text("Selected: Player");
-                ImGui.InputText("Name", ref _inspectorName, 64);
-                ImGui.DragFloat3("Position", ref _inspectorPos);
-                ImGui.DragFloat3("Rotation", ref _inspectorRot);
-                ImGui.DragFloat3("Scale", ref _inspectorScale, 0.01f);
+                
+                if (_selectedObject != null)
+                {
+                    ImGui.Text($"Selected: {_selectedObject.Name}");
+                    
+                    var pos = new System.Numerics.Vector3(_selectedObject.Position.X, _selectedObject.Position.Y, _selectedObject.Position.Z);
+                    if (ImGui.DragFloat3("Position", ref pos, 0.1f))
+                    {
+                        _selectedObject.Position = new Vector3(pos.X, pos.Y, pos.Z);
+                    }
+                    
+                    var rot = new System.Numerics.Vector3(_selectedObject.Rotation.X, _selectedObject.Rotation.Y, _selectedObject.Rotation.Z);
+                    if (ImGui.DragFloat3("Rotation", ref rot, 1f))
+                    {
+                        _selectedObject.Rotation = new Vector3(rot.X, rot.Y, rot.Z);
+                    }
+                    
+                    var scale = new System.Numerics.Vector3(_selectedObject.Scale.X, _selectedObject.Scale.Y, _selectedObject.Scale.Z);
+                    if (ImGui.DragFloat3("Scale", ref scale, 0.01f))
+                    {
+                        _selectedObject.Scale = new Vector3(scale.X, scale.Y, scale.Z);
+                    }
+                }
+                else
+                {
+                    ImGui.Text("No object selected");
+                }
             }
             ImGui.End();
         }
