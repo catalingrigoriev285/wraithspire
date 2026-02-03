@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using OpenTK.Mathematics;
 using wraithspire.engine.objects;
+using wraithspire.engine.physics;
+using wraithspire.engine.components;
 
 namespace wraithspire.engine
 {
@@ -76,6 +78,58 @@ namespace wraithspire.engine
             {
                 go.Update();
             }
+        }
+
+        public GameObject? Raycast(Ray ray)
+        {
+            GameObject? closestObj = null;
+            float closestDist = float.MaxValue;
+
+            foreach (var go in GameObjects)
+            {
+                if (!go.IsActive) continue;
+
+                var meshFilter = go.GetComponent<MeshFilter>();
+                if (meshFilter == null || meshFilter.Mesh == null) continue;
+
+                // Transform ray to local space
+                Matrix4 model = go.Transform.GetModelMatrix();
+                Matrix4 invModel = Matrix4.Invert(model);
+
+                Vector4 localOrigin4 = new Vector4(ray.Origin, 1.0f) * invModel;
+                Vector4 localDir4 = new Vector4(ray.Direction, 0.0f) * invModel;
+                
+                Vector3 localOrigin = localOrigin4.Xyz; // w should be 1
+                Vector3 localDir = localDir4.Xyz; // w should be 0
+
+                // RayIntersectsBox expects unit direction for correct T?
+                // Actually my implementation of RayIntersectsBox is purely algebraic:
+                // t = (min - origin) / dir
+                // So if dir is scaled, t is inversely scaled.
+                // Point = Origin + Dir * t
+                // It holds regardless of length of Dir.
+
+                Ray localRay = new Ray(localOrigin, localDir);
+
+                float? t = Physics.RayIntersectsBox(localRay, meshFilter.Mesh.Min, meshFilter.Mesh.Max);
+
+                if (t.HasValue && t.Value > 0)
+                {
+                    // Calculate world distance
+                    Vector3 hitLocal = localOrigin + localDir * t.Value;
+                    Vector4 hitWorld4 = new Vector4(hitLocal, 1.0f) * model;
+                    Vector3 hitWorld = hitWorld4.Xyz;
+
+                    float dist = (hitWorld - ray.Origin).Length;
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        closestObj = go;
+                    }
+                }
+            }
+
+            return closestObj;
         }
 
         public void Dispose()

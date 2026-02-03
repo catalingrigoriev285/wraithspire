@@ -13,11 +13,38 @@ namespace wraithspire.engine.rendering
         private int _vbo;
         private int _ebo;
 
+        public Vector3 Min { get; private set; }
+        public Vector3 Max { get; private set; }
+
         public Mesh(float[] vertices, uint[] indices)
         {
             Vertices = vertices;
             Indices = indices;
+            CalculateBounds();
             SetupMesh();
+        }
+
+        private void CalculateBounds()
+        {
+            float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+
+            for (int i = 0; i < Vertices.Length; i += 3)
+            {
+                float x = Vertices[i];
+                float y = Vertices[i + 1];
+                float z = Vertices[i + 2];
+
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+                if (z < minZ) minZ = z;
+                if (z > maxZ) maxZ = z;
+            }
+
+            Min = new Vector3(minX, minY, minZ);
+            Max = new Vector3(maxX, maxY, maxZ);
         }
 
         private void SetupMesh()

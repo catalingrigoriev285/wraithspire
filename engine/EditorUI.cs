@@ -6,15 +6,19 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using wraithspire.engine.objects;
 using wraithspire.engine.components;
+using wraithspire.engine.editor;
+using wraithspire.engine.physics;
 
 namespace wraithspire.engine
 {
-    internal sealed class EditorUI
+    internal sealed class EditorUI : IDisposable
     {
         private bool _isPlaying;
         private bool _isPaused;
         private Camera _camera = new Camera();
         private GameObject? _selectedObject = null;
+
+        private GizmoController _gizmoController = new GizmoController();
 
         public SceneManager? ManagerContext { get; set; }
 
@@ -34,6 +38,65 @@ namespace wraithspire.engine
             float bottomHeight = MathF.Round(height * 0.30f);
             float centerWidth = width - leftWidth - rightWidth;
             float centerHeight = height - bottomHeight - topMargin;
+
+            // Handle Object Picking (Left Ctrl + Click or just Click if not on UI/Gizmo)
+            // Just basic click for now.
+            // Check if mouse is within viewport area
+            var mouse = window.MouseState;
+            Vector2 mousePos = new Vector2(mouse.X, mouse.Y);
+            
+            bool isMouseInViewport = mousePos.X > leftWidth && mousePos.X < (leftWidth + centerWidth) &&
+                                     mousePos.Y > topMargin && mousePos.Y < (topMargin + centerHeight);
+            
+            bool imGuiWantsInput = ImGui.GetIO().WantCaptureKeyboard || ImGui.GetIO().WantCaptureMouse;
+
+            if (window.MouseState.IsButtonPressed(MouseButton.Left) && !imGuiWantsInput && isMouseInViewport)
+            {
+                // Only pick if not interacting with gizmo (GizmoController dragging logic is separate)
+                // But we don't know if GizmoController consumed the click unless we query it or if we check intersection with gizmo first.
+                // For simplicity: If Gizmo is hovered, don't pick.
+                
+                // We'd need to expose IsHovering from GizmoController.
+                // Or just do picking. Selecting the same object again is fine.
+                // But selecting another object behind the gizmo is annoying if we meant to grab the axis.
+                
+                // Let's defer to GizmoController first. But GizmoController is internal state.
+                // Assuming Gizmo handles dragging in Update, but for initial click:
+                // We can't easily check _gizmoController state here publicly.
+                
+                // Let's just implement picking. If user clicks axis, they might also "pick" the object behind or the same object.
+                // If we pick a DIFFERENT object while clicking axis, that's bad.
+                
+                // Solution: Raycast scene.
+                if (ManagerContext?.ActiveScene != null)
+                {
+                     Ray ray = Physics.ScreenPointToRay(mousePos, new Vector2(width, height), _camera.View, _camera.Projection);
+                     GameObject? hit = ManagerContext.ActiveScene.Raycast(ray);
+                     if (hit != null)
+                     {
+                         _selectedObject = hit;
+                     }
+                     else 
+                     {
+                         // Optional: Deselect if clicked empty space?
+                         // _selectedObject = null; 
+                     }
+                }
+            }
+
+            // Update Gizmo
+            // imGuiWantsInput was calculated above
+            if (!imGuiWantsInput && _selectedObject != null)
+            {
+                if (!ImGui.GetIO().WantCaptureMouse)
+                    _gizmoController.Update(_selectedObject, _camera, window.MouseState, new Vector2(width, height));
+            }
+            
+            // Render Gizmo
+            if (_selectedObject != null)
+            {
+                 _gizmoController.Render(_selectedObject, _camera);
+            }
 
             // Toolbar
             ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth, topMargin), ImGuiCond.Always);
@@ -280,6 +343,11 @@ namespace wraithspire.engine
                 }
             }
             ImGui.End();
+        }
+
+        public void Dispose()
+        {
+            _gizmoController.Dispose();
         }
     }
 }

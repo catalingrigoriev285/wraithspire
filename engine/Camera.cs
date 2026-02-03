@@ -8,7 +8,7 @@ namespace wraithspire.engine
     {
         private float _yaw = -MathHelper.PiOver2; // along +Z
         private float _pitch = -0.3f;
-        private Vector3 _position = new Vector3(0f, 8f, -12f);
+        public Vector3 Position { get; private set; } = new Vector3(0f, 8f, -12f);
         private Vector2 _lastMouse;
         private bool _rotating;
 
@@ -28,12 +28,12 @@ namespace wraithspire.engine
 
             if (processInput)
             {
-                if (kb.IsKeyDown(Keys.W)) _position += forward * speed * dt;
-                if (kb.IsKeyDown(Keys.S)) _position -= forward * speed * dt;
-                if (kb.IsKeyDown(Keys.A)) _position -= right * speed * dt;
-                if (kb.IsKeyDown(Keys.D)) _position += right * speed * dt;
-                if (kb.IsKeyDown(Keys.Space)) _position += Vector3.UnitY * speed * dt;
-                if (kb.IsKeyDown(Keys.LeftControl)) _position -= Vector3.UnitY * speed * dt;
+                if (kb.IsKeyDown(Keys.W)) Position += forward * speed * dt;
+                if (kb.IsKeyDown(Keys.S)) Position -= forward * speed * dt;
+                if (kb.IsKeyDown(Keys.A)) Position -= right * speed * dt;
+                if (kb.IsKeyDown(Keys.D)) Position += right * speed * dt;
+                if (kb.IsKeyDown(Keys.Space)) Position += Vector3.UnitY * speed * dt;
+                if (kb.IsKeyDown(Keys.LeftControl)) Position -= Vector3.UnitY * speed * dt;
 
                 bool rightDown = mouse.IsButtonDown(MouseButton.Right);
                 var curMouse = new Vector2(mouse.X, mouse.Y);
@@ -61,8 +61,9 @@ namespace wraithspire.engine
             }
 
             Projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60f), vpWidth / (float)vpHeight, 0.1f, 2000f);
-            Vector3 target = _position + forward;
-            View = Matrix4.LookAt(_position, target, Vector3.UnitY);
+            Vector3 target = Position + forward;
+            View = Matrix4.LookAt(Position, target, Vector3.UnitY);
+
         }
 
     }
