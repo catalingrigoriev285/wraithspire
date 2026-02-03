@@ -35,6 +35,8 @@ namespace wraithspire.engine
         private SceneManager? _managerContext;
         private Camera _camera = new Camera();
         private GizmoController _gizmoController = new GizmoController();
+        public IReadOnlyList<IEditorModule> Modules => _modules;
+        
         private List<IEditorModule> _modules = new List<IEditorModule>();
 
         private void InitializeModules()
@@ -46,6 +48,8 @@ namespace wraithspire.engine
             _modules.Add(new HierarchyModule());
             _modules.Add(new ProjectModule());
             _modules.Add(new InspectorModule());
+            _modules.Add(new ModuleStoreModule());
+            _modules.Add(new LightingModule());
 
             foreach (var module in _modules)
             {

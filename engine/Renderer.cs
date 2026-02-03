@@ -15,33 +15,43 @@ namespace wraithspire.engine
             scene.Terrain?.Render(projection, view);
 
             // Find Main Light
-            rendering.Light mainLight = new rendering.Light(new Vector3(0, 5, 0), Vector3.One);
+            rendering.Light mainLight;
             
-            LightComponent? sceneLight = null;
-            // Iterate to find first active light
-            foreach (var go in scene.GameObjects)
+            if (wraithspire.engine.editor.modules.GlobalSettings.IsLightingEnabled)
             {
-                if (!go.IsActive) continue;
-                var lightComp = go.GetComponent<LightComponent>();
-                if (lightComp != null)
+                mainLight = new rendering.Light(new Vector3(0, 5, 0), Vector3.One);
+                LightComponent? sceneLight = null;
+                // Iterate to find first active light
+                foreach (var go in scene.GameObjects)
                 {
-                    sceneLight = lightComp;
-                    break;
+                    if (!go.IsActive) continue;
+                    var lightComp = go.GetComponent<LightComponent>();
+                    if (lightComp != null)
+                    {
+                        sceneLight = lightComp;
+                        break;
+                    }
+                }
+
+                if (sceneLight != null)
+                {
+                    mainLight = new rendering.Light(sceneLight.Transform.Position, sceneLight.Color, sceneLight.Intensity);
                 }
             }
-
-            if (sceneLight != null)
+            else
             {
-                mainLight = new rendering.Light(sceneLight.Transform.Position, sceneLight.Color, sceneLight.Intensity);
+                // Disable lighting (use 1.0 intensity to mimic unlit/ambient)
+                mainLight = new rendering.Light(Vector3.Zero, Vector3.One, 1.0f);
             }
 
             // Render all scene objects
+            bool lightingEnabled = wraithspire.engine.editor.modules.GlobalSettings.IsLightingEnabled;
             foreach (var go in scene.GameObjects)
             {
                 if (!go.IsActive) continue;
                 
                 var meshRenderer = go.GetComponent<MeshRenderer>();
-                meshRenderer?.Render(view, projection, scene.Camera.Position, mainLight);
+                meshRenderer?.Render(view, projection, scene.Camera.Position, mainLight, lightingEnabled);
             }
         }
     }

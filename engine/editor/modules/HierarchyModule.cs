@@ -9,6 +9,8 @@ namespace wraithspire.engine.editor.modules
     internal class HierarchyModule : EditorModule
     {
         public override string Name => "Hierarchy";
+        public override string Description => "Displays the scene graph and allows object selection.";
+        public override string Category => "Core";
         private string _newSceneName = "New Scene";
 
         public override void Render(GameWindow window)
@@ -46,6 +48,17 @@ namespace wraithspire.engine.editor.modules
                             if (ImGui.Selectable(obj.Name, isSelected))
                             {
                                 _editor.SelectedObject = obj;
+                            }
+                            
+                            if (ImGui.BeginPopupContextItem())
+                            {
+                                if (ImGui.MenuItem("Delete"))
+                                {
+                                    activeScene.RemoveGameObject(obj);
+                                    if (_editor.SelectedObject == obj) _editor.SelectedObject = null;
+                                    i--; // Adjust index since we removed an item
+                                }
+                                ImGui.EndPopup();
                             }
                             ImGui.PopID();
                         }
@@ -100,7 +113,10 @@ namespace wraithspire.engine.editor.modules
                  {
                      if (ImGui.MenuItem("Cube")) activeScene?.CreateCube();
                      if (ImGui.MenuItem("Sphere")) activeScene?.CreateSphere();
-                     if (ImGui.MenuItem("Light")) activeScene?.CreateLight();
+                     if (wraithspire.engine.editor.modules.GlobalSettings.IsLightingEnabled)
+                     {
+                         if (ImGui.MenuItem("Light")) activeScene?.CreateLight();
+                     }
                      ImGui.EndMenu();
                  }
                  ImGui.EndPopup();

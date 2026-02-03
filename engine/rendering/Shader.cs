@@ -57,6 +57,12 @@ namespace wraithspire.engine.rendering
             GL.Uniform3(location, vector);
         }
 
+        public void SetInt(string name, int value)
+        {
+            int location = GL.GetUniformLocation(Handle, name);
+            GL.Uniform1(location, value);
+        }
+
         public void Dispose()
         {
             GL.DeleteProgram(Handle);
@@ -90,6 +96,7 @@ in vec3 v_fragPos;
 
 uniform vec3 u_viewPos;
 uniform vec3 u_color;
+uniform int u_lightingEnabled;
 
 // Light struct
 struct Light {
@@ -100,6 +107,11 @@ struct Light {
 uniform Light u_light;
 
 void main(){
+  if (u_lightingEnabled == 0) {
+      out_color = vec4(u_color, 1.0);
+      return;
+  }
+
   // Ambient
   float ambientStrength = 0.1;
   vec3 ambient = ambientStrength * u_light.color * u_light.intensity;

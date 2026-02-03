@@ -7,6 +7,8 @@ namespace wraithspire.engine.editor.modules
     internal class ProjectModule : EditorModule
     {
         public override string Name => "Project";
+        public override string Description => "Manage project scenes and assets.";
+        public override string Category => "Core";
         private string _newSceneName = "New Scene";
 
         public override void Render(GameWindow window)

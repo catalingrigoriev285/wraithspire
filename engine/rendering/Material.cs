@@ -12,7 +12,7 @@ namespace wraithspire.engine.rendering
             Shader = shader;
         }
 
-        public void Use(Matrix4 model, Matrix4 view, Matrix4 projection, Vector3 viewPos, Light light)
+        public void Use(Matrix4 model, Matrix4 view, Matrix4 projection, Vector3 viewPos, Light light, bool lightingEnabled)
         {
             Shader.Use();
             Shader.SetMatrix4("u_model", model);
@@ -25,6 +25,8 @@ namespace wraithspire.engine.rendering
             Shader.SetVector3("u_light.color", light.Color);
             int location = OpenTK.Graphics.OpenGL4.GL.GetUniformLocation(Shader.Handle, "u_light.intensity");
             OpenTK.Graphics.OpenGL4.GL.Uniform1(location, light.Intensity);
+            
+            Shader.SetInt("u_lightingEnabled", lightingEnabled ? 1 : 0);
         }
     }
 }

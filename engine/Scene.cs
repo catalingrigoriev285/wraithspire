@@ -21,8 +21,7 @@ namespace wraithspire.engine
             Name = name;
             Camera = new Camera();
             
-            // Add a default light
-            CreateLight();
+            // Default objects if any?
         }
 
         private int _cubeCounter = 0;
@@ -56,6 +55,15 @@ namespace wraithspire.engine
             var sphere = PrimitiveFactory.CreateSphere(name);
             sphere.Transform.Position = GetNextSpawnPosition();
             GameObjects.Add(sphere);
+        }
+
+        public void RemoveGameObject(GameObject obj)
+        {
+             if (GameObjects.Contains(obj))
+             {
+                 GameObjects.Remove(obj);
+                 obj.Dispose();
+             }
         }
 
         public void CreateLight()

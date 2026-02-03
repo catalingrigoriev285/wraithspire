@@ -8,6 +8,8 @@ namespace wraithspire.engine.editor.modules
     internal class ToolbarModule : EditorModule
     {
         public override string Name => "Toolbar";
+        public override string Description => "Main toolbar with playback controls.";
+        public override string Category => "Core";
         
         // These control the position relative to the main layout
         // For now, hardcoded similar to original EditorUI, but ideally dynamic.

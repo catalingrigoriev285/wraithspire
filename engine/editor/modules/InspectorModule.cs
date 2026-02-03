@@ -10,6 +10,8 @@ namespace wraithspire.engine.editor.modules
     internal class InspectorModule : EditorModule
     {
         public override string Name => "Inspector";
+        public override string Description => "View and edit properties of the selected object.";
+        public override string Category => "Core";
 
         public override void Render(GameWindow window)
         {
