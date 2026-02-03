@@ -1,0 +1,117 @@
+﻿using System;
+using ImGuiNET;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+
+namespace wraithspire.engine
+{
+    internal sealed class EditorUI
+    {
+        private bool _isPlaying;
+        private bool _isPaused;
+        private string _inspectorName = "Player";
+        private System.Numerics.Vector3 _inspectorPos = new System.Numerics.Vector3(0, 0, 0);
+        private System.Numerics.Vector3 _inspectorRot = new System.Numerics.Vector3(0, 0, 0);
+        private System.Numerics.Vector3 _inspectorScale = new System.Numerics.Vector3(1, 1, 1);
+
+        public void Render(GameWindow window)
+        {
+            float width = window.ClientSize.X;
+            float height = window.ClientSize.Y;
+
+            float topMargin = 0f;
+            float leftWidth = MathF.Round(width * 0.20f);
+            float rightWidth = MathF.Round(width * 0.25f);
+            float bottomHeight = MathF.Round(height * 0.30f);
+            float centerWidth = width - leftWidth - rightWidth;
+            float centerHeight = height - bottomHeight - topMargin;
+
+            // Toolbar
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth, topMargin), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(centerWidth, 100f), ImGuiCond.Always);
+            if (ImGui.Begin("Toolbar", ImGuiWindowFlags.None))
+            {
+                if (ImGui.Button(_isPlaying ? "Stop" : "Play"))
+                {
+                    _isPlaying = !_isPlaying;
+                    if (!_isPlaying) _isPaused = false;
+                }
+                ImGui.SameLine();
+                if (ImGui.Button(_isPaused ? "Resume" : "Pause"))
+                {
+                    if (_isPlaying)
+                        _isPaused = !_isPaused;
+                }
+                ImGui.SameLine();
+                ImGui.Text(_isPlaying ? (_isPaused ? "Paused" : "Playing") : "Stopped");
+                // Update camera controls using window input
+                _camera.Update(window, (int)centerWidth, (int)(centerHeight - 100f));
+            }
+            ImGui.End();
+
+            // Hierarchy
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(leftWidth, centerHeight), ImGuiCond.Always);
+            if (ImGui.Begin("Hierarchy", ImGuiWindowFlags.None))
+            {
+                ImGui.Text("Scene Hierarchy");
+                ImGui.Separator();
+                if (ImGui.TreeNodeEx("Root", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    ImGui.PushID("Camera"); ImGui.BulletText("Camera"); ImGui.PopID();
+                    ImGui.PushID("DirectionalLight"); ImGui.BulletText("Directional Light"); ImGui.PopID();
+                    ImGui.PushID("Player"); ImGui.BulletText("Player"); ImGui.PopID();
+                    ImGui.TreePop();
+                }
+
+            }
+            ImGui.End();
+
+            // Project
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin + centerHeight), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(width, bottomHeight), ImGuiCond.Always);
+            if (ImGui.Begin("Project", ImGuiWindowFlags.None))
+            {
+                ImGui.Text("Project Files");
+                ImGui.Separator();
+                if (ImGui.BeginTable("ProjectTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+                {
+                    ImGui.TableSetupColumn("Assets");
+                    ImGui.TableSetupColumn("Type");
+                    ImGui.TableHeadersRow();
+
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0); ImGui.Text("scene.main");
+                    ImGui.TableSetColumnIndex(1); ImGui.Text("Scene");
+
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0); ImGui.Text("textures/brick.png");
+                    ImGui.TableSetColumnIndex(1); ImGui.Text("Texture");
+
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0); ImGui.Text("scripts/player.cs");
+                    ImGui.TableSetColumnIndex(1); ImGui.Text("Script");
+
+                    ImGui.EndTable();
+                }
+            }
+            ImGui.End();
+
+            // Inspector
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth + centerWidth, topMargin), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(rightWidth, centerHeight), ImGuiCond.Always);
+            if (ImGui.Begin("Inspector", ImGuiWindowFlags.None))
+            {
+                ImGui.Text("Inspector");
+                ImGui.Separator();
+                ImGui.Text("Selected: Player");
+                ImGui.InputText("Name", ref _inspectorName, 64);
+                ImGui.DragFloat3("Position", ref _inspectorPos);
+                ImGui.DragFloat3("Rotation", ref _inspectorRot);
+                ImGui.DragFloat3("Scale", ref _inspectorScale, 0.01f);
+            }
+            ImGui.End();
+        }
+    }
+}

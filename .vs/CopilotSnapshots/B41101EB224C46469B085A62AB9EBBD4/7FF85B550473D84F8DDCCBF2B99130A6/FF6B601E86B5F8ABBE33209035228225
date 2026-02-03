@@ -1,0 +1,188 @@
+﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using wraithspire.engine.subsystems;
+using ImGuiNET;
+
+namespace wraithspire.engine
+{
+    internal sealed class Window : IDisposable
+    {
+        private readonly GameWindow _window;
+        private ImGuiController? _imgui;
+        private bool _isPlaying;
+        private bool _isPaused;
+
+        public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
+        {
+            var nativeSettings = new NativeWindowSettings
+            {
+                ClientSize = new Vector2i(width, height),
+                Title = title
+            };
+
+            var gwSettings = new GameWindowSettings
+            {
+                UpdateFrequency = 60
+            };
+
+            _window = new GameWindow(gwSettings, nativeSettings);
+            _window.WindowState = WindowState.Maximized;
+
+            _window.Load += OnLoad;
+            _window.UpdateFrame += OnUpdateFrame;
+            _window.RenderFrame += OnRenderFrame;
+            _window.Resize += OnResize;
+            _window.Unload += OnUnload;
+        }
+
+        private void OnLoad()
+        {
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+            _imgui = new ImGuiController(_window);
+        }
+
+        private void OnUpdateFrame(FrameEventArgs args)
+        {
+            _imgui?.Update((float)args.Time);
+        }
+
+        private void OnRenderFrame(FrameEventArgs args)
+        {
+            GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            RenderEditorUI();
+
+            _imgui?.Render();
+            _window.SwapBuffers();
+        }
+
+        private void RenderEditorUI()
+        {
+            if (_imgui == null) return;
+            // Manual layout without docking: compute regions
+            float width = _window.ClientSize.X;
+            float height = _window.ClientSize.Y;
+
+            float topMargin = 0f;
+            float leftWidth = MathF.Round(width * 0.20f);
+            float rightWidth = MathF.Round(width * 0.25f);
+            float bottomHeight = MathF.Round(height * 0.30f);
+            float centerWidth = width - leftWidth - rightWidth;
+            float centerHeight = height - bottomHeight - topMargin;
+
+            // Toolbar at top of center area
+            float toolbarHeight = 48f;
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth, topMargin), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(centerWidth, toolbarHeight), ImGuiCond.Once);
+            if (ImGui.Begin("Toolbar", ImGuiWindowFlags.None))
+            {
+                if (ImGui.Button(_isPlaying ? "Stop" : "Play"))
+                {
+                    _isPlaying = !_isPlaying;
+                    if (!_isPlaying) _isPaused = false;
+                }
+                ImGui.SameLine();
+                if (ImGui.Button(_isPaused ? "Resume" : "Pause"))
+                {
+                    if (_isPlaying)
+                        _isPaused = !_isPaused;
+                }
+                ImGui.SameLine();
+                ImGui.Text(_isPlaying ? (_isPaused ? "Paused" : "Playing") : "Stopped");
+            }
+            ImGui.End();
+
+            // Hierarchy panel
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(leftWidth, centerHeight), ImGuiCond.Once);
+            if (ImGui.Begin("Hierarchy", ImGuiWindowFlags.None))
+            {
+                ImGui.Text("Scene Hierarchy");
+                ImGui.Separator();
+                // Placeholder items
+                if (ImGui.TreeNodeEx("Root", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    ImGui.PushID("Camera"); ImGui.BulletText("Camera"); ImGui.PopID();
+                    ImGui.PushID("DirectionalLight"); ImGui.BulletText("Directional Light"); ImGui.PopID();
+                    ImGui.PushID("Player"); ImGui.BulletText("Player"); ImGui.PopID();
+                    ImGui.TreePop();
+                }
+            }
+            ImGui.End();
+
+            // Project panel
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin + centerHeight), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(width, bottomHeight), ImGuiCond.Once);
+            if (ImGui.Begin("Project", ImGuiWindowFlags.None))
+            {
+                ImGui.Text("Project Files");
+                ImGui.Separator();
+                if (ImGui.BeginTable("ProjectTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+                {
+                    ImGui.TableSetupColumn("Assets");
+                    ImGui.TableSetupColumn("Type");
+                    ImGui.TableHeadersRow();
+
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0); ImGui.Text("scene.main");
+                    ImGui.TableSetColumnIndex(1); ImGui.Text("Scene");
+
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0); ImGui.Text("textures/brick.png");
+                    ImGui.TableSetColumnIndex(1); ImGui.Text("Texture");
+
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0); ImGui.Text("scripts/player.cs");
+                    ImGui.TableSetColumnIndex(1); ImGui.Text("Script");
+
+                    ImGui.EndTable();
+                }
+            }
+            ImGui.End();
+
+            // Inspector panel
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth + centerWidth, topMargin), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(rightWidth, centerHeight), ImGuiCond.Once);
+            if (ImGui.Begin("Inspector", ImGuiWindowFlags.None))
+            {
+                ImGui.Text("Inspector");
+                ImGui.Separator();
+                ImGui.Text("Selected: Player");
+                ImGui.InputText("Name", ref _inspectorName, 64);
+                ImGui.DragFloat3("Position", ref _inspectorPos);
+                ImGui.DragFloat3("Rotation", ref _inspectorRot);
+                ImGui.DragFloat3("Scale", ref _inspectorScale, 0.01f);
+            }
+            ImGui.End();
+        }
+
+        // Simple inspector state
+        private string _inspectorName = "Player";
+        private System.Numerics.Vector3 _inspectorPos = new System.Numerics.Vector3(0, 0, 0);
+        private System.Numerics.Vector3 _inspectorRot = new System.Numerics.Vector3(0, 0, 0);
+        private System.Numerics.Vector3 _inspectorScale = new System.Numerics.Vector3(1, 1, 1);
+
+        private void OnResize(ResizeEventArgs size)
+        {
+            _imgui?.WindowResized(size.Width, size.Height);
+        }
+
+        private void OnUnload()
+        {
+            _imgui?.Dispose();
+        }
+
+        public void Run()
+        {
+            _window.Run();
+        }
+
+        public void Dispose()
+        {
+            _window?.Dispose();
+        }
+    }
+}

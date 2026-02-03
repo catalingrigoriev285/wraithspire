@@ -1,0 +1,60 @@
+﻿using System;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using ImGuiNET;
+
+namespace Wraithspire
+{
+    internal static class Program
+    {
+        private static void Main()
+        {
+            var nativeSettings = new NativeWindowSettings
+            {
+                ClientSize = new Vector2i(1280, 720),
+                Title = "Wraithspire Engine"
+            };
+
+            using var window = new GameWindow(GameWindowSettings.Default, nativeSettings);
+            ImGuiController? imgui = null;
+
+            window.Load += () =>
+            {
+                GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+                imgui = new ImGuiController(window);
+            };
+
+            window.UpdateFrame += args =>
+            {
+                imgui?.Update((float)args.Time);
+            };
+
+            window.RenderFrame += args =>
+            {
+                GL.Viewport(0, 0, window.ClientSize.X, window.ClientSize.Y);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+                //
+
+                imgui?.Render();
+                window.SwapBuffers();
+            };
+
+            window.Resize += size =>
+            {
+                imgui?.WindowResized(size.Width, size.Height);
+            };
+
+            window.Unload += () =>
+            {
+                imgui?.Dispose();
+            };
+
+            window.Run();
+        }
+    }
+
+}

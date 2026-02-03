@@ -1,0 +1,138 @@
+﻿using System;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using ImGuiNET;
+
+namespace Wraithspire
+{
+    internal static class Program
+    {
+        private static void Main()
+        {
+            var nativeSettings = new NativeWindowSettings
+            {
+                Size = new Vector2i(1280, 720),
+                Title = "OpenTK + ImGui.NET"
+            };
+
+            using var window = new GameWindow(GameWindowSettings.Default, nativeSettings);
+            ImGuiController? imgui = null;
+            int cubeVao = 0, cubeVbo = 0, cubeEbo = 0, cubeShader = 0;
+            float angle = 0f;
+
+            window.Load += () =>
+            {
+                GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+                imgui = new ImGuiController(window);
+
+                // Setup cube geometry
+                float[] vertices = {
+                    // positions          // colors
+                    -0.5f, -0.5f, -0.5f,  1f, 0f, 0f,
+                     0.5f, -0.5f, -0.5f,  0f, 1f, 0f,
+                     0.5f,  0.5f, -0.5f,  0f, 0f, 1f,
+                    -0.5f,  0.5f, -0.5f,  1f, 1f, 0f,
+                    -0.5f, -0.5f,  0.5f,  1f, 0f, 1f,
+                     0.5f, -0.5f,  0.5f,  0f, 1f, 1f,
+                     0.5f,  0.5f,  0.5f,  1f, 1f, 1f,
+                    -0.5f,  0.5f,  0.5f,  0.2f, 0.2f, 0.2f,
+                };
+                uint[] indices = {
+                    0,1,2, 2,3,0,
+                    4,5,6, 6,7,4,
+                    0,1,5, 5,4,0,
+                    2,3,7, 7,6,2,
+                    1,2,6, 6,5,1,
+                    3,0,4, 4,7,3
+                };
+
+                string vs = "#version 330 core\n"+
+                            "layout(location=0) in vec3 aPos;\n"+
+                            "layout(location=1) in vec3 aColor;\n"+
+                            "uniform mat4 uMVP;\n"+
+                            "out vec3 vColor;\n"+
+                            "void main(){ vColor=aColor; gl_Position = uMVP*vec4(aPos,1.0); }";
+                string fs = "#version 330 core\n"+
+                            "in vec3 vColor;\n"+
+                            "out vec4 FragColor;\n"+
+                            "void main(){ FragColor=vec4(vColor,1.0); }";
+                int vsh = GL.CreateShader(ShaderType.VertexShader);
+                GL.ShaderSource(vsh, vs); GL.CompileShader(vsh);
+                int fsh = GL.CreateShader(ShaderType.FragmentShader);
+                GL.ShaderSource(fsh, fs); GL.CompileShader(fsh);
+                cubeShader = GL.CreateProgram();
+                GL.AttachShader(cubeShader, vsh);
+                GL.AttachShader(cubeShader, fsh);
+                GL.LinkProgram(cubeShader);
+                GL.DeleteShader(vsh); GL.DeleteShader(fsh);
+
+                cubeVao = GL.GenVertexArray();
+                cubeVbo = GL.GenBuffer();
+                cubeEbo = GL.GenBuffer();
+                GL.BindVertexArray(cubeVao);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, cubeVbo);
+                GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, cubeEbo);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+                GL.EnableVertexAttribArray(0);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+                GL.EnableVertexAttribArray(1);
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+                GL.BindVertexArray(0);
+                GL.Enable(EnableCap.DepthTest);
+            };
+
+            window.UpdateFrame += args =>
+            {
+                // Update per-frame input/time for ImGui
+                imgui?.Update((float)args.Time);
+            };
+
+            window.RenderFrame += args =>
+            {
+                GL.Viewport(0, 0, window.ClientSize.X, window.ClientSize.Y);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+                // Render rotating cube
+                angle += (float)args.Time * 50f;
+                GL.Enable(EnableCap.DepthTest);
+                var proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60f), window.ClientSize.X/(float)window.ClientSize.Y, 0.1f, 100f);
+                var view = Matrix4.LookAt(new Vector3(2,2,2), Vector3.Zero, Vector3.UnitY);
+                var model = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(angle)) * Matrix4.CreateRotationX(MathHelper.DegreesToRadians(angle*0.5f));
+                var mvp = model * view * proj;
+                GL.UseProgram(cubeShader);
+                int loc = GL.GetUniformLocation(cubeShader, "uMVP");
+                GL.UniformMatrix4(loc, false, ref mvp);
+                GL.BindVertexArray(cubeVao);
+                GL.DrawElements(PrimitiveType.Triangles, 36, DrawElementsType.UnsignedInt, 0);
+                GL.BindVertexArray(0);
+
+                // Build UI
+                ImGui.ShowDemoWindow();
+
+                imgui?.Render();
+                window.SwapBuffers();
+            };
+
+            window.Resize += size =>
+            {
+                imgui?.WindowResized(size.Width, size.Height);
+            };
+
+            window.Unload += () =>
+            {
+                imgui?.Dispose();
+                if (cubeVao != 0) GL.DeleteVertexArray(cubeVao);
+                if (cubeVbo != 0) GL.DeleteBuffer(cubeVbo);
+                if (cubeEbo != 0) GL.DeleteBuffer(cubeEbo);
+                if (cubeShader != 0) GL.DeleteProgram(cubeShader);
+            };
+
+            window.Run();
+        }
+    }
+
+}

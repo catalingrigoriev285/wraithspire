@@ -1,0 +1,74 @@
+﻿using System;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using Wraithspire;
+
+namespace wraithspire.Engine
+{
+    internal sealed class Window : IDisposable
+    {
+        private readonly GameWindow _window;
+        private ImGuiController? _imgui;
+
+        public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
+        {
+            var nativeSettings = new NativeWindowSettings
+            {
+                ClientSize = new Vector2i(width, height),
+                Title = title
+            };
+            _window = new GameWindow(GameWindowSettings.Default, nativeSettings);
+            _window.WindowState = WindowState.Maximized;
+
+            _window.Load += OnLoad;
+            _window.UpdateFrame += OnUpdateFrame;
+            _window.RenderFrame += OnRenderFrame;
+            _window.Resize += OnResize;
+            _window.Unload += OnUnload;
+        }
+
+        private void OnLoad()
+        {
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+            _imgui = new ImGuiController(_window);
+        }
+
+        private void OnUpdateFrame(FrameEventArgs args)
+        {
+            _imgui?.Update((float)args.Time);
+        }
+
+        private void OnRenderFrame(FrameEventArgs args)
+        {
+            GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            // Place rendering code here
+
+            _imgui?.Render();
+            _window.SwapBuffers();
+        }
+
+        private void OnResize(ResizeEventArgs size)
+        {
+            _imgui?.WindowResized(size.Width, size.Height);
+        }
+
+        private void OnUnload()
+        {
+            _imgui?.Dispose();
+        }
+
+        public void Run()
+        {
+            _window.Run();
+        }
+
+        public void Dispose()
+        {
+            _window?.Dispose();
+        }
+    }
+}

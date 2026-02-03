@@ -1,0 +1,374 @@
+﻿using System;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using wraithspire.engine.objects.primitives;
+
+namespace wraithspire.engine
+{
+    internal enum GizmoAxis
+    {
+        None,
+        X,
+        Y,
+        Z
+    }
+
+    internal sealed class TransformGizmo : IDisposable
+    {
+        private int _vao;
+        private int _vbo;
+        private int _arrowVao;
+        private int _arrowVbo;
+        private int _arrowEbo;
+        private int _arrowIndexCount;
+        private int _shader;
+        private int _projLoc;
+        private int _viewLoc;
+        private int _modelLoc;
+        private int _colorLoc;
+
+        private GizmoAxis _hoveredAxis = GizmoAxis.None;
+        private GizmoAxis _draggedAxis = GizmoAxis.None;
+        private Vector3 _dragStartPos;
+        private Vector3 _objectStartPos;
+        private float _gizmoLength = 1.5f;
+
+        public Primitive? TargetObject { get; set; }
+        public bool IsDragging => _draggedAxis != GizmoAxis.None;
+
+        public void Initialize()
+        {
+            CreateShader();
+            CreateLineMesh();
+            CreateArrowMesh();
+        }
+
+        private void CreateShader()
+        {
+            const string vs = "#version 330 core\n" +
+                              "layout(location=0) in vec3 in_pos;\n" +
+                              "uniform mat4 u_proj;\n" +
+                              "uniform mat4 u_view;\n" +
+                              "uniform mat4 u_model;\n" +
+                              "void main(){\n" +
+                              "  gl_Position = u_proj * u_view * u_model * vec4(in_pos, 1.0);\n" +
+                              "}";
+
+            const string fs = "#version 330 core\n" +
+                              "out vec4 out_color;\n" +
+                              "uniform vec3 u_color;\n" +
+                              "void main(){\n" +
+                              "  out_color = vec4(u_color, 1.0);\n" +
+                              "}";
+
+            int vert = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(vert, vs);
+            GL.CompileShader(vert);
+
+            int frag = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(frag, fs);
+            GL.CompileShader(frag);
+
+            _shader = GL.CreateProgram();
+            GL.AttachShader(_shader, vert);
+            GL.AttachShader(_shader, frag);
+            GL.LinkProgram(_shader);
+
+            GL.DeleteShader(vert);
+            GL.DeleteShader(frag);
+
+            _projLoc = GL.GetUniformLocation(_shader, "u_proj");
+            _viewLoc = GL.GetUniformLocation(_shader, "u_view");
+            _modelLoc = GL.GetUniformLocation(_shader, "u_model");
+            _colorLoc = GL.GetUniformLocation(_shader, "u_color");
+        }
+
+        private void CreateLineMesh()
+        {
+            // Simple line from origin
+            float[] vertices = new float[]
+            {
+                0f, 0f, 0f,
+                1f, 0f, 0f
+            };
+
+            _vao = GL.GenVertexArray();
+            _vbo = GL.GenBuffer();
+
+            GL.BindVertexArray(_vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.BindVertexArray(0);
+        }
+
+        private void CreateArrowMesh()
+        {
+            // Create a cone for arrow head pointing along +X
+            int segments = 8;
+            float coneHeight = 0.3f;
+            float coneRadius = 0.1f;
+            
+            List<float> vertices = new List<float>();
+            List<int> indices = new List<int>();
+            
+            // Tip of the cone pointing outward along +X
+            vertices.AddRange(new float[] { coneHeight, 0f, 0f });
+            
+            // Base circle vertices at origin
+            for (int i = 0; i < segments; i++)
+            {
+                float angle = (float)i / segments * MathF.PI * 2f;
+                float x = 0f; // Base at origin
+                float y = MathF.Cos(angle) * coneRadius;
+                float z = MathF.Sin(angle) * coneRadius;
+                vertices.AddRange(new float[] { x, y, z });
+            }
+            
+            // Create triangles for cone sides
+            for (int i = 0; i < segments; i++)
+            {
+                int next = (i + 1) % segments;
+                indices.Add(0); // Tip
+                indices.Add(i + 1);
+                indices.Add(next + 1);
+            }
+            
+            // Create base cap
+            for (int i = 1; i < segments - 1; i++)
+            {
+                indices.Add(1);
+                indices.Add(i + 1);
+                indices.Add(i + 2);
+            }
+            
+            _arrowIndexCount = indices.Count;
+            
+            _arrowVao = GL.GenVertexArray();
+            _arrowVbo = GL.GenBuffer();
+            _arrowEbo = GL.GenBuffer();
+            
+            GL.BindVertexArray(_arrowVao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _arrowVbo);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * sizeof(float), vertices.ToArray(), BufferUsageHint.StaticDraw);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _arrowEbo);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Count * sizeof(int), indices.ToArray(), BufferUsageHint.StaticDraw);
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.BindVertexArray(0);
+        }
+
+        public void Render(Matrix4 proj, Matrix4 view)
+        {
+            if (TargetObject == null || _vao == 0) return;
+
+            GL.UseProgram(_shader);
+            GL.Disable(EnableCap.DepthTest); // Always show gizmo on top
+
+            // X-axis (Red)
+            RenderAxis(proj, view, Vector3.UnitX, _hoveredAxis == GizmoAxis.X || _draggedAxis == GizmoAxis.X ? new Vector3(1f, 0.5f, 0.5f) : new Vector3(1f, 0f, 0f));
+
+            // Y-axis (Green)
+            RenderAxis(proj, view, Vector3.UnitY, _hoveredAxis == GizmoAxis.Y || _draggedAxis == GizmoAxis.Y ? new Vector3(0.5f, 1f, 0.5f) : new Vector3(0f, 1f, 0f));
+
+            // Z-axis (Blue)
+            RenderAxis(proj, view, Vector3.UnitZ, _hoveredAxis == GizmoAxis.Z || _draggedAxis == GizmoAxis.Z ? new Vector3(0.5f, 0.5f, 1f) : new Vector3(0f, 0f, 1f));
+
+            GL.Enable(EnableCap.DepthTest);
+            GL.UseProgram(0);
+        }
+
+        private void RenderAxis(Matrix4 proj, Matrix4 view, Vector3 axis, Vector3 color)
+        {
+            var model = Matrix4.CreateScale(_gizmoLength, _gizmoLength, _gizmoLength);
+            
+            // Rotate to align with axis
+            if (axis == Vector3.UnitY)
+                model *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(-90f));
+            else if (axis == Vector3.UnitZ)
+                model *= Matrix4.CreateRotationY(MathHelper.DegreesToRadians(90f));
+            
+            model *= Matrix4.CreateTranslation(TargetObject.Position);
+
+            GL.UniformMatrix4(_projLoc, false, ref proj);
+            GL.UniformMatrix4(_viewLoc, false, ref view);
+            GL.UniformMatrix4(_modelLoc, false, ref model);
+            GL.Uniform3(_colorLoc, color);
+
+            GL.BindVertexArray(_vao);
+            GL.LineWidth(3.0f);
+            GL.DrawArrays(PrimitiveType.Lines, 0, 2);
+            GL.BindVertexArray(0);
+            
+            // Render arrow head at the end
+            RenderArrowHead(proj, view, axis, color);
+        }
+        
+        private void RenderArrowHead(Matrix4 proj, Matrix4 view, Vector3 axis, Vector3 color)
+        {
+            // Position arrow at the end of the line
+            Vector3 arrowPos = TargetObject!.Position + axis * _gizmoLength;
+            
+            var model = Matrix4.Identity;
+            
+            // Rotate to align with axis (cone points along +X by default)
+            if (axis == Vector3.UnitX)
+            {
+                // Already aligned
+            }
+            else if (axis == Vector3.UnitY)
+            {
+                model *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(90f));
+            }
+            else if (axis == Vector3.UnitZ)
+            {
+                model *= Matrix4.CreateRotationY(MathHelper.DegreesToRadians(-90f));
+            }
+            
+            model *= Matrix4.CreateTranslation(arrowPos);
+            
+            GL.UniformMatrix4(_projLoc, false, ref proj);
+            GL.UniformMatrix4(_viewLoc, false, ref view);
+            GL.UniformMatrix4(_modelLoc, false, ref model);
+            GL.Uniform3(_colorLoc, color);
+            
+            GL.BindVertexArray(_arrowVao);
+            GL.DrawElements(PrimitiveType.Triangles, _arrowIndexCount, DrawElementsType.UnsignedInt, 0);
+            GL.BindVertexArray(0);
+        }
+
+        public void CheckHover(Ray mouseRay)
+        {
+            if (TargetObject == null || IsDragging)
+                return;
+
+            _hoveredAxis = GizmoAxis.None;
+            float closestDist = float.MaxValue;
+
+            // Check each axis
+            CheckAxisHover(mouseRay, Vector3.UnitX, GizmoAxis.X, ref closestDist);
+            CheckAxisHover(mouseRay, Vector3.UnitY, GizmoAxis.Y, ref closestDist);
+            CheckAxisHover(mouseRay, Vector3.UnitZ, GizmoAxis.Z, ref closestDist);
+        }
+
+        private void CheckAxisHover(Ray mouseRay, Vector3 axis, GizmoAxis axisEnum, ref float closestDist)
+        {
+            Vector3 axisStart = TargetObject!.Position;
+            Vector3 axisEnd = TargetObject.Position + axis * _gizmoLength;
+
+            float dist = RayLineDistance(mouseRay, axisStart, axisEnd);
+            // Increased threshold for easier selection
+            if (dist < 0.5f && dist < closestDist)
+            {
+                closestDist = dist;
+                _hoveredAxis = axisEnum;
+            }
+        }
+
+        public void BeginDrag(Ray mouseRay)
+        {
+            if (_hoveredAxis != GizmoAxis.None && TargetObject != null)
+            {
+                _draggedAxis = _hoveredAxis;
+                _objectStartPos = TargetObject.Position;
+                _dragStartPos = GetAxisPlaneIntersection(mouseRay, _draggedAxis);
+            }
+        }
+
+        public void UpdateDrag(Ray mouseRay)
+        {
+            if (!IsDragging || TargetObject == null)
+                return;
+
+            Vector3 currentPos = GetAxisPlaneIntersection(mouseRay, _draggedAxis);
+            Vector3 delta = currentPos - _dragStartPos;
+
+            // Constrain to axis
+            Vector3 axis = _draggedAxis switch
+            {
+                GizmoAxis.X => Vector3.UnitX,
+                GizmoAxis.Y => Vector3.UnitY,
+                GizmoAxis.Z => Vector3.UnitZ,
+                _ => Vector3.Zero
+            };
+
+            float projection = Vector3.Dot(delta, axis);
+            TargetObject.Position = _objectStartPos + axis * projection;
+        }
+
+        public void EndDrag()
+        {
+            _draggedAxis = GizmoAxis.None;
+        }
+
+        private Vector3 GetAxisPlaneIntersection(Ray ray, GizmoAxis axis)
+        {
+            // Create a plane perpendicular to the camera view that contains the axis
+            Vector3 planeNormal = axis switch
+            {
+                GizmoAxis.X => Vector3.UnitY, // Use Y plane for X axis
+                GizmoAxis.Y => Vector3.UnitX, // Use X plane for Y axis
+                GizmoAxis.Z => Vector3.UnitX, // Use X plane for Z axis
+                _ => Vector3.UnitY
+            };
+
+            float denom = Vector3.Dot(ray.Direction, planeNormal);
+            if (Math.Abs(denom) < 0.0001f)
+                return TargetObject?.Position ?? Vector3.Zero;
+
+            float t = Vector3.Dot(TargetObject.Position - ray.Origin, planeNormal) / denom;
+            return ray.Origin + ray.Direction * t;
+        }
+
+        private float RayLineDistance(Ray ray, Vector3 lineStart, Vector3 lineEnd)
+        {
+            Vector3 lineDir = Vector3.Normalize(lineEnd - lineStart);
+            Vector3 w = ray.Origin - lineStart;
+
+            float a = Vector3.Dot(ray.Direction, ray.Direction);
+            float b = Vector3.Dot(ray.Direction, lineDir);
+            float c = Vector3.Dot(lineDir, lineDir);
+            float d = Vector3.Dot(ray.Direction, w);
+            float e = Vector3.Dot(lineDir, w);
+
+            float denom = a * c - b * b;
+            if (Math.Abs(denom) < 0.0001f)
+                return float.MaxValue;
+
+            float t = (b * e - c * d) / denom;
+            float s = (a * e - b * d) / denom;
+
+            // Clamp s to line segment
+            s = Math.Clamp(s, 0f, Vector3.Distance(lineStart, lineEnd));
+
+            Vector3 closestOnRay = ray.Origin + ray.Direction * t;
+            Vector3 closestOnLine = lineStart + lineDir * s;
+
+            return Vector3.Distance(closestOnRay, closestOnLine);
+        }
+
+        public void Dispose()
+        {
+            if (_vao != 0) GL.DeleteVertexArray(_vao);
+            if (_vbo != 0) GL.DeleteBuffer(_vbo);
+            if (_arrowVao != 0) GL.DeleteVertexArray(_arrowVao);
+            if (_arrowVbo != 0) GL.DeleteBuffer(_arrowVbo);
+            if (_arrowEbo != 0) GL.DeleteBuffer(_arrowEbo);
+            if (_shader != 0) GL.DeleteProgram(_shader);
+            _vao = _vbo = _arrowVao = _arrowVbo = _arrowEbo = _shader = 0;
+        }
+    }
+
+    public struct Ray
+    {
+        public Vector3 Origin;
+        public Vector3 Direction;
+
+        public Ray(Vector3 origin, Vector3 direction)
+        {
+            Origin = origin;
+            Direction = Vector3.Normalize(direction);
+        }
+    }
+}

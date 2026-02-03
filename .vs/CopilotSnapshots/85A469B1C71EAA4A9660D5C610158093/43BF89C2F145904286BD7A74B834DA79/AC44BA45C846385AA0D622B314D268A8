@@ -1,0 +1,306 @@
+﻿using System;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using ImGuiNET;
+
+namespace Wraithspire
+{
+    internal static class Program
+    {
+        private static void Main()
+        {
+            var nativeSettings = new NativeWindowSettings
+            {
+                Size = new Vector2i(1280, 720),
+                Title = "OpenTK + ImGui.NET"
+            };
+
+            using var window = new GameWindow(GameWindowSettings.Default, nativeSettings);
+            ImGuiController? imgui = null;
+
+            window.Load += () =>
+            {
+                GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+                imgui = new ImGuiController(window);
+            };
+
+            window.UpdateFrame += args =>
+            {
+                // Update per-frame input/time for ImGui
+                imgui?.Update((float)args.Time);
+            };
+
+            window.RenderFrame += args =>
+            {
+                GL.Viewport(0, 0, window.ClientSize.X, window.ClientSize.Y);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+                // Build UI
+                ImGui.ShowDemoWindow();
+
+                imgui?.Render();
+                window.SwapBuffers();
+            };
+
+            window.Resize += size =>
+            {
+                imgui?.WindowResized(size.Width, size.Height);
+            };
+
+            window.Unload += () =>
+            {
+                imgui?.Dispose();
+            };
+
+            window.Run();
+        }
+    }
+
+    // Minimal ImGui controller for OpenTK 4
+    internal sealed class ImGuiController : IDisposable
+    {
+        private int _vertexArray;
+        private int _vertexBuffer;
+        private int _indexBuffer;
+        private int _fontTexture;
+        private int _shader;
+        private int _projLocation;
+        private readonly GameWindow _window;
+        private readonly GLFWCallbacks.KeyCallback _keyCallback;
+        private readonly GLFWCallbacks.MouseButtonCallback _mouseButtonCallback;
+        private readonly GLFWCallbacks.ScrollCallback _scrollCallback;
+        private readonly GLFWCallbacks.CharCallback _charCallback;
+
+        public ImGuiController(GameWindow window)
+        {
+            _window = window;
+            ImGui.CreateContext();
+            var io = ImGui.GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+            io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+
+            ImGui.StyleColorsDark();
+
+            // Setup key mappings
+            io.KeyMap[(int)ImGuiKey.Tab] = (int)Keys.Tab;
+            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)Keys.Left;
+            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)Keys.Right;
+            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)Keys.Up;
+            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)Keys.Down;
+            io.KeyMap[(int)ImGuiKey.PageUp] = (int)Keys.PageUp;
+            io.KeyMap[(int)ImGuiKey.PageDown] = (int)Keys.PageDown;
+            io.KeyMap[(int)ImGuiKey.Home] = (int)Keys.Home;
+            io.KeyMap[(int)ImGuiKey.End] = (int)Keys.End;
+            io.KeyMap[(int)ImGuiKey.Delete] = (int)Keys.Delete;
+            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Keys.Backspace;
+            io.KeyMap[(int)ImGuiKey.Enter] = (int)Keys.Enter;
+            io.KeyMap[(int)ImGuiKey.Escape] = (int)Keys.Escape;
+            io.KeyMap[(int)ImGuiKey.A] = (int)Keys.A;
+            io.KeyMap[(int)ImGuiKey.C] = (int)Keys.C;
+            io.KeyMap[(int)ImGuiKey.V] = (int)Keys.V;
+            io.KeyMap[(int)ImGuiKey.X] = (int)Keys.X;
+            io.KeyMap[(int)ImGuiKey.Y] = (int)Keys.Y;
+            io.KeyMap[(int)ImGuiKey.Z] = (int)Keys.Z;
+
+            _keyCallback = (wnd, key, scancode, action, mods) =>
+            {
+                if (action == InputAction.Press) io.KeysDown[(int)key] = true;
+                if (action == InputAction.Release) io.KeysDown[(int)key] = false;
+                io.KeyCtrl = _window.KeyboardState.IsKeyDown(Keys.LeftControl) || _window.KeyboardState.IsKeyDown(Keys.RightControl);
+                io.KeyAlt = _window.KeyboardState.IsKeyDown(Keys.LeftAlt) || _window.KeyboardState.IsKeyDown(Keys.RightAlt);
+                io.KeyShift = _window.KeyboardState.IsKeyDown(Keys.LeftShift) || _window.KeyboardState.IsKeyDown(Keys.RightShift);
+                io.KeySuper = _window.KeyboardState.IsKeyDown(Keys.LeftSuper) || _window.KeyboardState.IsKeyDown(Keys.RightSuper);
+            };
+            _mouseButtonCallback = (wnd, button, action, mods) =>
+            {
+                if (button >= 0 && button < ImGuiMouseButton.COUNT)
+                {
+                    io.MouseDown[(int)button] = action == InputAction.Press;
+                }
+            };
+            _scrollCallback = (wnd, xoffset, yoffset) =>
+            {
+                io.MouseWheelH += (float)xoffset;
+                io.MouseWheel += (float)yoffset;
+            };
+            _charCallback = (wnd, c) =>
+            {
+                io.AddInputCharacter((uint)c);
+            };
+
+            var handle = _window.WindowPtr;
+            GLFW.SetKeyCallback(handle, _keyCallback);
+            GLFW.SetMouseButtonCallback(handle, _mouseButtonCallback);
+            GLFW.SetScrollCallback(handle, _scrollCallback);
+            GLFW.SetCharCallback(handle, _charCallback);
+
+            CreateDeviceResources();
+            SetPerFrameImGuiData(1f / 60f);
+        }
+
+        public void Update(float deltaSeconds)
+        {
+            SetPerFrameImGuiData(deltaSeconds);
+            UpdateImGuiInput();
+            ImGui.NewFrame();
+        }
+
+        public void Render()
+        {
+            ImGui.Render();
+            RenderImDrawData(ImGui.GetDrawData());
+        }
+
+        public void WindowResized(int width, int height)
+        {
+            var io = ImGui.GetIO();
+            io.DisplaySize = new System.Numerics.Vector2(width, height);
+        }
+
+        private void SetPerFrameImGuiData(float deltaSeconds)
+        {
+            var io = ImGui.GetIO();
+            io.DisplaySize = new System.Numerics.Vector2(_window.ClientSize.X, _window.ClientSize.Y);
+            io.DeltaTime = deltaSeconds;
+        }
+
+        private void UpdateImGuiInput()
+        {
+            var io = ImGui.GetIO();
+            var mouse = _window.MouseState;
+            io.MousePos = new System.Numerics.Vector2(mouse.X, mouse.Y);
+        }
+
+        private void CreateDeviceResources()
+        {
+            _vertexArray = GL.GenVertexArray();
+            _vertexBuffer = GL.GenBuffer();
+            _indexBuffer = GL.GenBuffer();
+            GL.BindVertexArray(_vertexArray);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexBuffer);
+
+            const string vertexSource = "#version 330 core\n" +
+                                        "layout (location = 0) in vec2 in_position;\n" +
+                                        "layout (location = 1) in vec2 in_uv;\n" +
+                                        "layout (location = 2) in vec4 in_color;\n" +
+                                        "uniform mat4 u_proj;\n" +
+                                        "out vec2 frag_uv;\n" +
+                                        "out vec4 frag_color;\n" +
+                                        "void main(){\n" +
+                                        "    frag_uv = in_uv;\n" +
+                                        "    frag_color = in_color;\n" +
+                                        "    gl_Position = u_proj * vec4(in_position, 0.0, 1.0);\n" +
+                                        "}";
+
+            const string fragmentSource = "#version 330 core\n" +
+                                          "in vec2 frag_uv;\n" +
+                                          "in vec4 frag_color;\n" +
+                                          "uniform sampler2D u_texture;\n" +
+                                          "out vec4 out_color;\n" +
+                                          "void main(){\n" +
+                                          "    out_color = frag_color * texture(u_texture, frag_uv);\n" +
+                                          "}";
+
+            int vs = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(vs, vertexSource);
+            GL.CompileShader(vs);
+            int fs = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(fs, fragmentSource);
+            GL.CompileShader(fs);
+            _shader = GL.CreateProgram();
+            GL.AttachShader(_shader, vs);
+            GL.AttachShader(_shader, fs);
+            GL.LinkProgram(_shader);
+            GL.DeleteShader(vs);
+            GL.DeleteShader(fs);
+            _projLocation = GL.GetUniformLocation(_shader, "u_proj");
+
+            // Vertex attributes
+            int stride = sizeof(float) * 2 + sizeof(float) * 2 + sizeof(byte) * 4;
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, stride, 0);
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, stride, sizeof(float) * 2);
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.UnsignedByte, true, stride, sizeof(float) * 4);
+
+            CreateFontTexture();
+        }
+
+        private unsafe void CreateFontTexture()
+        {
+            var io = ImGui.GetIO();
+            io.Fonts.AddFontDefault();
+            io.Fonts.GetTexDataAsRGBA32(out byte* pixels, out int width, out int height, out int bytesPerPixel);
+
+            _fontTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, _fontTexture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)pixels);
+            io.Fonts.SetTexID(new IntPtr(_fontTexture));
+            io.Fonts.ClearTexData();
+        }
+
+        private void RenderImDrawData(ImDrawDataPtr drawData)
+        {
+            if (drawData.CmdListsCount == 0) return;
+
+            var io = ImGui.GetIO();
+            drawData.ScaleClipRects(io.DisplayFramebufferScale);
+
+            GL.Enable(EnableCap.Blend);
+            GL.BlendEquation(BlendEquationMode.FuncAdd);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.Disable(EnableCap.CullFace);
+            GL.Disable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.ScissorTest);
+
+            GL.UseProgram(_shader);
+
+            var mvp = Matrix4.CreateOrthographicOffCenter(0f, io.DisplaySize.X, io.DisplaySize.Y, 0f, -1f, 1f);
+            GL.UniformMatrix4(_projLocation, false, ref mvp);
+
+            GL.BindVertexArray(_vertexArray);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexBuffer);
+
+            for (int n = 0; n < drawData.CmdListsCount; n++)
+            {
+                var cmd = drawData.CmdListsRange[n];
+
+                GL.BufferData(BufferTarget.ArrayBuffer, cmd.VtxBuffer.Size * sizeof(ImDrawVert), cmd.VtxBuffer.Data, BufferUsageHint.StreamDraw);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, cmd.IdxBuffer.Size * sizeof(ushort), cmd.IdxBuffer.Data, BufferUsageHint.StreamDraw);
+
+                int idxOffset = 0;
+                for (int i = 0; i < cmd.CmdBuffer.Size; i++)
+                {
+                    var pcmd = cmd.CmdBuffer[i];
+                    GL.BindTexture(TextureTarget.Texture2D, (int)pcmd.TextureId);
+                    var clip = pcmd.ClipRect;
+                    GL.Scissor((int)clip.X, (int)(io.DisplaySize.Y - clip.W), (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
+                    GL.DrawElementsBaseVertex(PrimitiveType.Triangles, (int)pcmd.ElemCount, DrawElementsType.UnsignedShort, idxOffset * sizeof(ushort), (int)pcmd.VtxOffset);
+                    idxOffset += (int)pcmd.ElemCount;
+                }
+            }
+
+            GL.Disable(EnableCap.ScissorTest);
+            GL.Enable(EnableCap.DepthTest);
+            GL.Disable(EnableCap.Blend);
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteTexture(_fontTexture);
+            GL.DeleteBuffer(_vertexBuffer);
+            GL.DeleteBuffer(_indexBuffer);
+            GL.DeleteVertexArray(_vertexArray);
+            GL.DeleteProgram(_shader);
+        }
+    }
+}

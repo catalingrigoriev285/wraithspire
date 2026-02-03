@@ -1,0 +1,274 @@
+﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using wraithspire.engine.subsystems;
+using wraithspire.engine.objects.primitives;
+using ImGuiNET;
+
+namespace wraithspire.engine
+{
+    internal sealed class Window : IDisposable
+    {
+        private readonly GameWindow _window;
+        private ImGuiController? _imgui;
+        private objects.CheckboardTerrain? _terrain;
+        private EditorUI? _editorUI;
+        private TransformGizmo? _gizmo;
+        private List<Primitive> _sceneObjects = new List<Primitive>();
+        private int _cubeCounter = 0;
+        private Vector2 _lastMousePos;
+
+        public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
+        {
+            var nativeSettings = new NativeWindowSettings
+            {
+                ClientSize = new Vector2i(width, height),
+                Title = title
+            };
+
+            var gwSettings = new GameWindowSettings
+            {
+                UpdateFrequency = 60
+            };
+
+            _window = new GameWindow(gwSettings, nativeSettings);
+            _window.WindowState = WindowState.Maximized;
+
+            _window.Load += OnLoad;
+            _window.UpdateFrame += OnUpdateFrame;
+            _window.RenderFrame += OnRenderFrame;
+            _window.Resize += OnResize;
+            _window.Unload += OnUnload;
+            _window.MouseDown += OnMouseDown;
+            _window.MouseUp += OnMouseUp;
+            _window.MouseMove += OnMouseMove;
+        }
+
+        private void OnLoad()
+        {
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+            _imgui = new ImGuiController(_window);
+            _editorUI = new EditorUI();
+            _editorUI.SceneObjects = _sceneObjects;
+            _editorUI.OnCreateCube = CreateCube;
+            _terrain = new objects.CheckboardTerrain();
+            _terrain.Initialize();
+            _gizmo = new TransformGizmo();
+            _gizmo.Initialize();
+        }
+
+        private void OnUpdateFrame(FrameEventArgs args)
+        {
+            _imgui?.Update((float)args.Time);
+            if (_editorUI != null)
+            {
+                float width = _window.ClientSize.X;
+                float height = _window.ClientSize.Y;
+                float leftWidth = MathF.Round(width * 0.20f);
+                float rightWidth = MathF.Round(width * 0.25f);
+                float bottomHeight = MathF.Round(height * 0.30f);
+                float centerWidth = width - leftWidth - rightWidth;
+                float centerHeight = height - bottomHeight;
+                int viewportWidth = (int)centerWidth;
+                int viewportHeight = (int)(centerHeight - 100f);
+                _editorUI.UpdateCamera(_window, viewportWidth, viewportHeight);
+            }
+        }
+
+        private void OnRenderFrame(FrameEventArgs args)
+        {
+            GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            RenderScene();
+            _editorUI?.Render(_window);
+
+            _imgui?.Render();
+            _window.SwapBuffers();
+        }
+
+        private void OnResize(ResizeEventArgs size)
+        {
+            _imgui?.WindowResized(size.Width, size.Height);
+        }
+
+        private void OnUnload()
+        {
+            _imgui?.Dispose();
+            _terrain?.Dispose();
+            _gizmo?.Dispose();
+            foreach (var obj in _sceneObjects)
+            {
+                obj.Dispose();
+            }
+        }
+
+        private void RenderScene()
+        {
+            if (_terrain == null) return;
+            if (_editorUI == null) return;
+
+            // Compute and use a single viewport rectangle consistently
+            var vp = GetViewportRect();
+            GL.Viewport(vp.X, vp.Y, vp.Width, vp.Height);
+            GL.Enable(EnableCap.DepthTest);
+            var proj = _editorUI.CameraProjection;
+            var view = _editorUI.CameraView;
+            _terrain.Render(proj, view);
+            
+            // Render all scene objects
+            foreach (var obj in _sceneObjects)
+            {
+                obj.Render(proj, view);
+            }
+            
+            // Render gizmo for selected object
+            if (_gizmo != null && _editorUI.SelectedObject != null)
+            {
+                _gizmo.TargetObject = _editorUI.SelectedObject;
+                _gizmo.Render(proj, view);
+            }
+
+            // Restore viewport to full window for UI render
+            GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
+        }
+
+        private void CreateCube()
+        {
+            string name = _cubeCounter == 0 ? "Cube" : $"Cube ({_cubeCounter})";
+            _cubeCounter++;
+            
+            var cube = new Cube(name);
+            cube.Position = new Vector3(0f, 1f, 0f); // Place above ground
+            cube.Initialize();
+            _sceneObjects.Add(cube);
+        }
+
+        private void OnMouseDown(MouseButtonEventArgs e)
+        {
+            if (e.Button == MouseButton.Left && !ImGui.GetIO().WantCaptureMouse && _editorUI != null && _gizmo != null && IsMouseInViewport())
+            {
+                var mouseRay = GetViewportMouseRay();
+                
+                // First try selecting an object directly through viewport
+                var before = _editorUI.SelectedObject;
+                TrySelectObject(mouseRay);
+
+                // If we didn't change selection, then attempt gizmo drag
+                if (_editorUI.SelectedObject == before)
+                {
+                    _gizmo.BeginDrag(mouseRay);
+                }
+            }
+        }
+
+        private void TrySelectObject(Ray mouseRay)
+        {
+            Primitive? closest = null;
+            float closestDist = float.MaxValue;
+            
+            foreach (var obj in _sceneObjects)
+            {
+                // Simple bounding sphere check
+                float radius = MathF.Max(obj.Scale.X, MathF.Max(obj.Scale.Y, obj.Scale.Z)) * 0.5f + 0.5f;
+                Vector3 center = obj.Position;
+                
+                // Ray-sphere intersection
+                Vector3 oc = mouseRay.Origin - center;
+                float a = Vector3.Dot(mouseRay.Direction, mouseRay.Direction);
+                float b = 2.0f * Vector3.Dot(oc, mouseRay.Direction);
+                float c = Vector3.Dot(oc, oc) - radius * radius;
+                float discriminant = b * b - 4 * a * c;
+                
+                if (discriminant >= 0)
+                {
+                    float t = (-b - MathF.Sqrt(discriminant)) / (2.0f * a);
+                    if (t > 0 && t < closestDist)
+                    {
+                        closestDist = t;
+                        closest = obj;
+                    }
+                }
+            }
+            
+            if (closest != null)
+            {
+                _editorUI!.SelectedObject = closest;
+            }
+        }
+
+        private void OnMouseUp(MouseButtonEventArgs e)
+        {
+            if (e.Button == MouseButton.Left && _gizmo != null)
+            {
+                _gizmo.EndDrag();
+            }
+        }
+
+        private void OnMouseMove(MouseMoveEventArgs e)
+        {
+            _lastMousePos = new Vector2(e.X, e.Y);
+            
+            if (_gizmo != null && _editorUI != null && IsMouseInViewport())
+            {
+                var mouseRay = GetViewportMouseRay();
+                
+                if (_gizmo.IsDragging)
+                {
+                    _gizmo.UpdateDrag(mouseRay);
+                }
+                else if (!ImGui.GetIO().WantCaptureMouse)
+                {
+                    _gizmo.CheckHover(mouseRay);
+                }
+            }
+        }
+
+        private bool IsMouseInViewport()
+        {
+            var vp = GetViewportRect();
+            return _lastMousePos.X >= vp.X &&
+                   _lastMousePos.X <= (vp.X + vp.Width) &&
+                   _lastMousePos.Y >= vp.Y &&
+                   _lastMousePos.Y <= (vp.Y + vp.Height);
+        }
+
+        private Ray GetViewportMouseRay()
+        {
+            var vp = GetViewportRect();
+            float viewportMouseX = _lastMousePos.X - vp.X;
+            float viewportMouseY = _lastMousePos.Y - vp.Y;
+            return _editorUI!.Camera.GetMouseRay(viewportMouseX, viewportMouseY, vp.Width, vp.Height);
+        }
+
+        private (int X, int Y, int Width, int Height) GetViewportRect()
+        {
+            int width = _window.ClientSize.X;
+            int height = _window.ClientSize.Y;
+            int leftWidth = (int)MathF.Round(width * 0.20f);
+            int rightWidth = (int)MathF.Round(width * 0.25f);
+            int bottomHeight = (int)MathF.Round(height * 0.30f);
+            int centerWidth = width - leftWidth - rightWidth;
+            int centerHeight = height - bottomHeight;
+            int vpX = leftWidth;
+            int vpY = 100; // toolbar height
+            int vpW = centerWidth;
+            int vpH = centerHeight - 100; // below toolbar
+            if (vpW < 1) vpW = 1;
+            if (vpH < 1) vpH = 1;
+            return (vpX, vpY, vpW, vpH);
+        }
+
+        public void Run()
+        {
+            _window.Run();
+        }
+
+        public void Dispose()
+        {
+            _window?.Dispose();
+        }
+    }
+}
