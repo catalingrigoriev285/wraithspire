@@ -1,6 +1,7 @@
 using System;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using wraithspire.engine.components;
 
 namespace wraithspire.engine
 {
@@ -14,9 +15,12 @@ namespace wraithspire.engine
             scene.Terrain?.Render(projection, view);
 
             // Render all scene objects
-            foreach (var obj in scene.Objects)
+            foreach (var go in scene.GameObjects)
             {
-                obj.Render(projection, view);
+                if (!go.IsActive) continue;
+                
+                var meshRenderer = go.GetComponent<MeshRenderer>();
+                meshRenderer?.Render(view, projection);
             }
         }
     }

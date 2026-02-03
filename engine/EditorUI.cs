@@ -4,7 +4,8 @@ using ImGuiNET;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using wraithspire.engine.objects.primitives;
+using wraithspire.engine.objects;
+using wraithspire.engine.components;
 
 namespace wraithspire.engine
 {
@@ -13,7 +14,7 @@ namespace wraithspire.engine
         private bool _isPlaying;
         private bool _isPaused;
         private Camera _camera = new Camera();
-        private Primitive? _selectedObject = null;
+        private GameObject? _selectedObject = null;
 
         public SceneManager? ManagerContext { get; set; }
 
@@ -53,7 +54,7 @@ namespace wraithspire.engine
                 ImGui.SameLine();
                 ImGui.Text(_isPlaying ? (_isPaused ? "Paused" : "Playing") : "Stopped");
                 // Update camera controls using window input
-                _camera.Update(window, (int)centerWidth, (int)(centerHeight - 100f));
+                _camera.Update(window, (int)centerWidth, (int)(centerHeight - 100f), !ImGui.GetIO().WantCaptureKeyboard);
             }
             ImGui.End();
 
@@ -73,7 +74,7 @@ namespace wraithspire.engine
                     // Display scene objects
                     if (activeScene != null)
                     {
-                        var objects = activeScene.Objects;
+                        var objects = activeScene.GameObjects;
                         for (int i = 0; i < objects.Count; i++)
                         {
                             var obj = objects[i];
@@ -138,18 +139,6 @@ namespace wraithspire.engine
                         if (ImGui.MenuItem("Sphere"))
                         {
                             activeScene?.CreateSphere();
-                        }
-                        if (ImGui.MenuItem("Capsule"))
-                        {
-                            activeScene?.CreateCapsule();
-                        }
-                        if (ImGui.MenuItem("Cylinder"))
-                        {
-                            activeScene?.CreateCylinder();
-                        }
-                        if (ImGui.MenuItem("Plane"))
-                        {
-                            activeScene?.CreatePlane();
                         }
                         ImGui.EndMenu();
                     }
@@ -244,22 +233,45 @@ namespace wraithspire.engine
                 {
                     ImGui.Text($"Selected: {_selectedObject.Name}");
                     
-                    var pos = new System.Numerics.Vector3(_selectedObject.Position.X, _selectedObject.Position.Y, _selectedObject.Position.Z);
+                    // Access field directly now that it is public
+                    ImGui.Checkbox("Active", ref _selectedObject.IsActive);
+
+                    var transform = _selectedObject.Transform;
+                    
+                    var pos = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
                     if (ImGui.DragFloat3("Position", ref pos, 0.1f))
                     {
-                        _selectedObject.Position = new Vector3(pos.X, pos.Y, pos.Z);
+                        transform.Position = new Vector3(pos.X, pos.Y, pos.Z);
                     }
                     
-                    var rot = new System.Numerics.Vector3(_selectedObject.Rotation.X, _selectedObject.Rotation.Y, _selectedObject.Rotation.Z);
+                    var rot = new System.Numerics.Vector3(transform.Rotation.X, transform.Rotation.Y, transform.Rotation.Z);
                     if (ImGui.DragFloat3("Rotation", ref rot, 1f))
                     {
-                        _selectedObject.Rotation = new Vector3(rot.X, rot.Y, rot.Z);
+                        transform.Rotation = new Vector3(rot.X, rot.Y, rot.Z);
                     }
                     
-                    var scale = new System.Numerics.Vector3(_selectedObject.Scale.X, _selectedObject.Scale.Y, _selectedObject.Scale.Z);
+                    var scale = new System.Numerics.Vector3(transform.Scale.X, transform.Scale.Y, transform.Scale.Z);
                     if (ImGui.DragFloat3("Scale", ref scale, 0.01f))
                     {
-                        _selectedObject.Scale = new Vector3(scale.X, scale.Y, scale.Z);
+                        transform.Scale = new Vector3(scale.X, scale.Y, scale.Z);
+                    }
+                    
+                    // Show Components
+                    ImGui.Separator();
+                    ImGui.Text("Components");
+                    
+                    var renderer = _selectedObject.GetComponent<MeshRenderer>();
+                    if (renderer != null && renderer.Material != null)
+                    {
+                        if (ImGui.TreeNode("Mesh Renderer"))
+                        {
+                            var color = new System.Numerics.Vector3(renderer.Material.Color.X, renderer.Material.Color.Y, renderer.Material.Color.Z);
+                            if (ImGui.ColorEdit3("Color", ref color))
+                            {
+                                renderer.Material.Color = new Vector3(color.X, color.Y, color.Z);
+                            }
+                            ImGui.TreePop();
+                        }
                     }
                 }
                 else

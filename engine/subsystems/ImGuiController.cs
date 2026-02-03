@@ -170,6 +170,12 @@ namespace wraithspire.engine.subsystems
             }
         }
 
+        public void PressChar(char keyChar)
+        {
+            var io = ImGui.GetIO();
+            io.AddInputCharacter(keyChar);
+        }
+
         private void UpdateMouseButton(ImGuiIOPtr io, MouseButton button, bool down)
         {
             if (!_prevMouseStates.TryGetValue(button, out var prev) || prev != down)

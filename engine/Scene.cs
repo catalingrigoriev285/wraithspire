@@ -2,15 +2,14 @@ using System;
 using System.Collections.Generic;
 using OpenTK.Mathematics;
 using wraithspire.engine.objects;
-using wraithspire.engine.objects.primitives;
 
 namespace wraithspire.engine
 {
     internal class Scene : IDisposable
     {
         public string Name { get; set; }
-        public List<Primitive> Objects { get; private set; } = new List<Primitive>();
-        public CheckboardTerrain? Terrain { get; private set; }
+        public List<GameObject> GameObjects { get; private set; } = new List<GameObject>();
+        public CheckboardTerrain? Terrain { get; private set; } // Terrain might need refactoring too, but keeping it for now
 
         public Scene(string name)
         {
@@ -19,15 +18,15 @@ namespace wraithspire.engine
 
         private int _cubeCounter = 0;
         private int _sphereCounter = 0;
-        private int _capsuleCounter = 0;
-        private int _cylinderCounter = 0;
-        private int _planeCounter = 0;
         private int _spawnCounter = 0;
 
         public void Initialize()
         {
             Terrain = new CheckboardTerrain();
             Terrain.Initialize();
+            
+            // Ensure shader init
+            PrimitiveFactory.Initialize();
         }
 
         public void CreateCube()
@@ -35,10 +34,9 @@ namespace wraithspire.engine
             string name = _cubeCounter == 0 ? "Cube" : $"Cube ({_cubeCounter})";
             _cubeCounter++;
 
-            var cube = new Cube(name);
-            cube.Position = GetNextSpawnPosition();
-            cube.Initialize();
-            Objects.Add(cube);
+            var cube = PrimitiveFactory.CreateCube(name);
+            cube.Transform.Position = GetNextSpawnPosition();
+            GameObjects.Add(cube);
         }
 
         public void CreateSphere()
@@ -46,48 +44,19 @@ namespace wraithspire.engine
             string name = _sphereCounter == 0 ? "Sphere" : $"Sphere ({_sphereCounter})";
             _sphereCounter++;
 
-            var sphere = new Sphere(name);
-            sphere.Position = GetNextSpawnPosition();
-            sphere.Initialize();
-            Objects.Add(sphere);
+            var sphere = PrimitiveFactory.CreateSphere(name);
+            sphere.Transform.Position = GetNextSpawnPosition();
+            GameObjects.Add(sphere);
         }
 
-        public void CreateCapsule()
-        {
-            string name = _capsuleCounter == 0 ? "Capsule" : $"Capsule ({_capsuleCounter})";
-            _capsuleCounter++;
-
-            var capsule = new Capsule(name);
-            capsule.Position = GetNextSpawnPosition();
-            capsule.Initialize();
-            Objects.Add(capsule);
-        }
-
-        public void CreateCylinder()
-        {
-            string name = _cylinderCounter == 0 ? "Cylinder" : $"Cylinder ({_cylinderCounter})";
-            _cylinderCounter++;
-
-            var cylinder = new Cylinder(name);
-            cylinder.Position = GetNextSpawnPosition();
-            cylinder.Initialize();
-            Objects.Add(cylinder);
-        }
-
-        public void CreatePlane()
-        {
-            string name = _planeCounter == 0 ? "Plane" : $"Plane ({_planeCounter})";
-            _planeCounter++;
-
-            var plane = new Plane(name);
-            plane.Position = GetNextSpawnPosition();
-            plane.Initialize();
-            Objects.Add(plane);
-        }
+        // Placeholder for other shapes until they are ported to PrimitiveFactory
+        public void CreateCapsule() { }
+        public void CreateCylinder() { }
+        public void CreatePlane() { }
 
         private Vector3 GetNextSpawnPosition()
         {
-            // Simple grid spawn pattern so newly created objects don't overlap.
+            // Simple grid spawn pattern
             const float spacing = 2.0f;
             const int cols = 6;
 
@@ -97,18 +66,26 @@ namespace wraithspire.engine
 
             float worldX = (x - (cols - 1) * 0.5f) * spacing;
             float worldZ = z * spacing;
-            float worldY = 1f; // above ground
+            float worldY = 0.5f; // Center of object usually (radius 0.5)
             return new Vector3(worldX, worldY, worldZ);
+        }
+        
+        public void Update()
+        {
+            foreach (var go in GameObjects)
+            {
+                go.Update();
+            }
         }
 
         public void Dispose()
         {
             Terrain?.Dispose();
-            foreach (var obj in Objects)
+            foreach (var go in GameObjects)
             {
-                obj.Dispose();
+                go.Dispose();
             }
-            Objects.Clear();
+            GameObjects.Clear();
         }
     }
 }

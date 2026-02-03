@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using wraithspire.engine.subsystems;
-using wraithspire.engine.objects.primitives;
+
 using ImGuiNET;
 
 namespace wraithspire.engine
@@ -36,7 +36,13 @@ namespace wraithspire.engine
             _window.UpdateFrame += OnUpdateFrame;
             _window.RenderFrame += OnRenderFrame;
             _window.Resize += OnResize;
+            _window.TextInput += OnTextInput;
             _window.Unload += OnUnload;
+        }
+
+        private void OnTextInput(TextInputEventArgs e)
+        {
+            _imgui?.PressChar((char)e.Unicode);
         }
 
         private void OnLoad()
@@ -54,10 +60,17 @@ namespace wraithspire.engine
             _editorUI.ManagerContext = _sceneManager;
         }
 
+
         private void OnUpdateFrame(FrameEventArgs args)
         {
+            Time.DeltaTime = (float)args.Time;
+            Time.TotalTime += Time.DeltaTime;
+
             _imgui?.Update((float)args.Time);
+            
+            _sceneManager?.ActiveScene?.Update();
         }
+
 
         private void OnRenderFrame(FrameEventArgs args)
         {

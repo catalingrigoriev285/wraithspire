@@ -15,7 +15,7 @@ namespace wraithspire.engine
         public Matrix4 View { get; private set; } = Matrix4.Identity;
         public Matrix4 Projection { get; private set; } = Matrix4.Identity;
 
-        public void Update(GameWindow window, int vpWidth, int vpHeight)
+        public void Update(GameWindow window, int vpWidth, int vpHeight, bool processInput = true)
         {
             var kb = window.KeyboardState;
             var mouse = window.MouseState;
@@ -26,40 +26,44 @@ namespace wraithspire.engine
             forward = Vector3.Normalize(forward);
             Vector3 right = Vector3.Normalize(Vector3.Cross(forward, Vector3.UnitY));
 
-            if (kb.IsKeyDown(Keys.W)) _position += forward * speed * dt;
-            if (kb.IsKeyDown(Keys.S)) _position -= forward * speed * dt;
-            if (kb.IsKeyDown(Keys.A)) _position -= right * speed * dt;
-            if (kb.IsKeyDown(Keys.D)) _position += right * speed * dt;
-            if (kb.IsKeyDown(Keys.Space)) _position += Vector3.UnitY * speed * dt;
-            if (kb.IsKeyDown(Keys.LeftControl)) _position -= Vector3.UnitY * speed * dt;
-
-            bool rightDown = mouse.IsButtonDown(MouseButton.Right);
-            var curMouse = new Vector2(mouse.X, mouse.Y);
-            if (rightDown)
+            if (processInput)
             {
-                if (!_rotating)
+                if (kb.IsKeyDown(Keys.W)) _position += forward * speed * dt;
+                if (kb.IsKeyDown(Keys.S)) _position -= forward * speed * dt;
+                if (kb.IsKeyDown(Keys.A)) _position -= right * speed * dt;
+                if (kb.IsKeyDown(Keys.D)) _position += right * speed * dt;
+                if (kb.IsKeyDown(Keys.Space)) _position += Vector3.UnitY * speed * dt;
+                if (kb.IsKeyDown(Keys.LeftControl)) _position -= Vector3.UnitY * speed * dt;
+
+                bool rightDown = mouse.IsButtonDown(MouseButton.Right);
+                var curMouse = new Vector2(mouse.X, mouse.Y);
+                if (rightDown)
                 {
-                    _rotating = true;
-                    _lastMouse = curMouse;
+                    if (!_rotating)
+                    {
+                        _rotating = true;
+                        _lastMouse = curMouse;
+                    }
+                    else
+                    {
+                        var delta = curMouse - _lastMouse;
+                        _lastMouse = curMouse;
+                        float sens = 0.0035f;
+                        _yaw += delta.X * sens;
+                        _pitch -= delta.Y * sens;
+                        _pitch = MathHelper.Clamp(_pitch, -MathHelper.PiOver2 + 0.01f, MathHelper.PiOver2 - 0.01f);
+                    }
                 }
                 else
                 {
-                    var delta = curMouse - _lastMouse;
-                    _lastMouse = curMouse;
-                    float sens = 0.0035f;
-                    _yaw += delta.X * sens;
-                    _pitch -= delta.Y * sens;
-                    _pitch = MathHelper.Clamp(_pitch, -MathHelper.PiOver2 + 0.01f, MathHelper.PiOver2 - 0.01f);
+                    _rotating = false;
                 }
-            }
-            else
-            {
-                _rotating = false;
             }
 
             Projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60f), vpWidth / (float)vpHeight, 0.1f, 2000f);
             Vector3 target = _position + forward;
             View = Matrix4.LookAt(_position, target, Vector3.UnitY);
         }
+
     }
 }
