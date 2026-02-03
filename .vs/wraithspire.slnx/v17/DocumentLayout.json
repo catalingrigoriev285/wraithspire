@@ -1,48 +1,7 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\window.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\window.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\editorui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\editorui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\objects\\primitives\\sphere.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\objects\\primitives\\sphere.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\objects\\primitives\\plane.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\objects\\primitives\\plane.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\subsystems\\imguicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\subsystems\\imguicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\objects\\checkboardterrain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\objects\\checkboardterrain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\camera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\camera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\objects\\primitives\\cylinder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\objects\\primitives\\cylinder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|c:\\users\\catal\\onedrive\\documents\\github\\wraithspire\\engine\\objects\\primitives\\capsule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{716938CA-1973-DF69-D381-8D5534CD83CC}|wraithspire.csproj|solutionrelative:engine\\objects\\primitives\\capsule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -50,134 +9,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": -1,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "Capsule.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Capsule.cs",
-              "RelativeDocumentMoniker": "engine\\objects\\primitives\\Capsule.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Capsule.cs",
-              "RelativeToolTip": "engine\\objects\\primitives\\Capsule.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAMYAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T15:49:11.336Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "Cylinder.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Cylinder.cs",
-              "RelativeDocumentMoniker": "engine\\objects\\primitives\\Cylinder.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Cylinder.cs",
-              "RelativeToolTip": "engine\\objects\\primitives\\Cylinder.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T15:48:48.62Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Sphere.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Sphere.cs",
-              "RelativeDocumentMoniker": "engine\\objects\\primitives\\Sphere.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Sphere.cs",
-              "RelativeToolTip": "engine\\objects\\primitives\\Sphere.cs",
-              "ViewState": "AgIAAHIAAAAAAAAAAAAAAHwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T15:48:31.206Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Plane.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Plane.cs",
-              "RelativeDocumentMoniker": "engine\\objects\\primitives\\Plane.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\primitives\\Plane.cs",
-              "RelativeToolTip": "engine\\objects\\primitives\\Plane.cs",
-              "ViewState": "AgIAAEUAAAAAAAAAAAAAAFQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T15:48:18.924Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "Camera.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\Camera.cs",
-              "RelativeDocumentMoniker": "engine\\Camera.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\Camera.cs",
-              "RelativeToolTip": "engine\\Camera.cs",
-              "ViewState": "AgIAADMAAAAAAAAAAAAAAEEAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T14:54:36.173Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "CheckboardTerrain.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\CheckboardTerrain.cs",
-              "RelativeDocumentMoniker": "engine\\objects\\CheckboardTerrain.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\objects\\CheckboardTerrain.cs",
-              "RelativeToolTip": "engine\\objects\\CheckboardTerrain.cs",
-              "ViewState": "AgIAAFsAAAAAAAAAAIAwwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T14:51:48.255Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "EditorUI.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\EditorUI.cs",
-              "RelativeDocumentMoniker": "engine\\EditorUI.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\EditorUI.cs",
-              "RelativeToolTip": "engine\\EditorUI.cs",
-              "ViewState": "AgIAACkAAAAAAAAAAABOwIUAAAAiAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T14:42:00.657Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "ImGuiController.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\subsystems\\ImGuiController.cs",
-              "RelativeDocumentMoniker": "engine\\subsystems\\ImGuiController.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\subsystems\\ImGuiController.cs",
-              "RelativeToolTip": "engine\\subsystems\\ImGuiController.cs",
-              "ViewState": "AgIAAEMAAAAAAAAAAABOwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T14:23:10.058Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Window.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\Window.cs",
-              "RelativeDocumentMoniker": "engine\\Window.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\engine\\Window.cs",
-              "RelativeToolTip": "engine\\Window.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAMwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T14:20:07.994Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\catal\\OneDrive\\Documents\\GitHub\\wraithspire\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T13:31:26.995Z"
             }
           ]
         }

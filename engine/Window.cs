@@ -12,15 +12,9 @@ namespace wraithspire.engine
     {
         private readonly GameWindow _window;
         private ImGuiController? _imgui;
-        private objects.CheckboardTerrain? _terrain;
         private EditorUI? _editorUI;
-        private List<Primitive> _sceneObjects = new List<Primitive>();
-        private int _cubeCounter = 0;
-        private int _sphereCounter = 0;
-        private int _capsuleCounter = 0;
-        private int _cylinderCounter = 0;
-        private int _planeCounter = 0;
-        private int _spawnCounter = 0;
+        private Scene? _scene;
+        private Renderer? _renderer;
 
         public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
         {
@@ -48,16 +42,16 @@ namespace wraithspire.engine
         private void OnLoad()
         {
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+            
             _imgui = new ImGuiController(_window);
+            
+            _scene = new Scene();
+            _scene.Initialize();
+
+            _renderer = new Renderer();
+
             _editorUI = new EditorUI();
-            _editorUI.SceneObjects = _sceneObjects;
-            _editorUI.OnCreateCube = CreateCube;
-            _editorUI.OnCreateSphere = CreateSphere;
-            _editorUI.OnCreateCapsule = CreateCapsule;
-            _editorUI.OnCreateCylinder = CreateCylinder;
-            _editorUI.OnCreatePlane = CreatePlane;
-            _terrain = new objects.CheckboardTerrain();
-            _terrain.Initialize();
+            _editorUI.SceneContext = _scene;
         }
 
         private void OnUpdateFrame(FrameEventArgs args)
@@ -70,7 +64,32 @@ namespace wraithspire.engine
             GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            RenderScene();
+            if (_renderer != null && _scene != null && _editorUI != null)
+            {
+                // The renderer needs view/proj from the editor/camera
+                // We should calculate the viewport for the "Game View" or "Scene View"
+                
+                // Keep the same viewport calculation logic if possible, or pass it to Renderer
+                // But Renderer.Render expects whole screen/framebuffer commands usually for now let's just use what was there
+                // Actually the previous code did a Viewport calculation.
+                
+                float width = _window.ClientSize.X;
+                float height = _window.ClientSize.Y;
+                float topMargin = 0f;
+                float leftWidth = MathF.Round(width * 0.20f);
+                float rightWidth = MathF.Round(width * 0.25f);
+                float bottomHeight = MathF.Round(height * 0.30f);
+                float centerWidth = width - leftWidth - rightWidth;
+                float centerHeight = height - bottomHeight - topMargin;
+                // int viewportWidth = (int)centerWidth;
+                // int viewportHeight = (int)(centerHeight - 100f); 
+
+                var proj = _editorUI.CameraProjection;
+                var view = _editorUI.CameraView;
+                
+                _renderer.Render(_scene, view, proj);
+            }
+
             _editorUI?.Render(_window);
 
             _imgui?.Render();
@@ -85,110 +104,7 @@ namespace wraithspire.engine
         private void OnUnload()
         {
             _imgui?.Dispose();
-            _terrain?.Dispose();
-            foreach (var obj in _sceneObjects)
-            {
-                obj.Dispose();
-            }
-        }
-
-        private void RenderScene()
-        {
-            if (_terrain == null) return;
-            if (_editorUI == null) return;
-
-            // Compute center viewport below toolbar using same layout values
-            float width = _window.ClientSize.X;
-            float height = _window.ClientSize.Y;
-            float topMargin = 0f;
-            float leftWidth = MathF.Round(width * 0.20f);
-            float rightWidth = MathF.Round(width * 0.25f);
-            float bottomHeight = MathF.Round(height * 0.30f);
-            float centerWidth = width - leftWidth - rightWidth;
-            float centerHeight = height - bottomHeight - topMargin;
-            int viewportWidth = (int)centerWidth;
-            int viewportHeight = (int)(centerHeight - 100f); // subtract toolbar height
-            GL.Enable(EnableCap.DepthTest);
-            var proj = _editorUI.CameraProjection;
-            var view = _editorUI.CameraView;
-            _terrain.Render(proj, view);
-            
-            // Render all scene objects
-            foreach (var obj in _sceneObjects)
-            {
-                obj.Render(proj, view);
-            }
-        }
-
-        private void CreateCube()
-        {
-            string name = _cubeCounter == 0 ? "Cube" : $"Cube ({_cubeCounter})";
-            _cubeCounter++;
-            
-            var cube = new Cube(name);
-            cube.Position = GetNextSpawnPosition();
-            cube.Initialize();
-            _sceneObjects.Add(cube);
-        }
-
-        private void CreateSphere()
-        {
-            string name = _sphereCounter == 0 ? "Sphere" : $"Sphere ({_sphereCounter})";
-            _sphereCounter++;
-
-            var sphere = new Sphere(name);
-            sphere.Position = GetNextSpawnPosition();
-            sphere.Initialize();
-            _sceneObjects.Add(sphere);
-        }
-
-        private void CreateCapsule()
-        {
-            string name = _capsuleCounter == 0 ? "Capsule" : $"Capsule ({_capsuleCounter})";
-            _capsuleCounter++;
-
-            var capsule = new Capsule(name);
-            capsule.Position = GetNextSpawnPosition();
-            capsule.Initialize();
-            _sceneObjects.Add(capsule);
-        }
-
-        private void CreateCylinder()
-        {
-            string name = _cylinderCounter == 0 ? "Cylinder" : $"Cylinder ({_cylinderCounter})";
-            _cylinderCounter++;
-
-            var cylinder = new Cylinder(name);
-            cylinder.Position = GetNextSpawnPosition();
-            cylinder.Initialize();
-            _sceneObjects.Add(cylinder);
-        }
-
-        private void CreatePlane()
-        {
-            string name = _planeCounter == 0 ? "Plane" : $"Plane ({_planeCounter})";
-            _planeCounter++;
-
-            var plane = new Plane(name);
-            plane.Position = GetNextSpawnPosition();
-            plane.Initialize();
-            _sceneObjects.Add(plane);
-        }
-
-        private Vector3 GetNextSpawnPosition()
-        {
-            // Simple grid spawn pattern so newly created objects don't overlap.
-            const float spacing = 2.0f;
-            const int cols = 6;
-
-            int i = _spawnCounter++;
-            int x = i % cols;
-            int z = i / cols;
-
-            float worldX = (x - (cols - 1) * 0.5f) * spacing;
-            float worldZ = z * spacing;
-            float worldY = 1f; // above ground
-            return new Vector3(worldX, worldY, worldZ);
+            _scene?.Dispose();
         }
 
         public void Run()

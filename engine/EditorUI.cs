@@ -15,12 +15,7 @@ namespace wraithspire.engine
         private Camera _camera = new Camera();
         private Primitive? _selectedObject = null;
 
-        public Action? OnCreateCube { get; set; }
-        public Action? OnCreateSphere { get; set; }
-        public Action? OnCreateCapsule { get; set; }
-        public Action? OnCreateCylinder { get; set; }
-        public Action? OnCreatePlane { get; set; }
-        public List<Primitive> SceneObjects { get; set; } = new List<Primitive>();
+        public Scene? SceneContext { get; set; }
 
         public Matrix4 CameraView => _camera.View;
         public Matrix4 CameraProjection => _camera.Projection;
@@ -73,16 +68,20 @@ namespace wraithspire.engine
                     ImGui.PushID("DirectionalLight"); ImGui.BulletText("Directional Light"); ImGui.PopID();
                     
                     // Display scene objects
-                    for (int i = 0; i < SceneObjects.Count; i++)
+                    if (SceneContext != null)
                     {
-                        var obj = SceneObjects[i];
-                        ImGui.PushID(i);
-                        bool isSelected = (_selectedObject == obj);
-                        if (ImGui.Selectable(obj.Name, isSelected))
+                        var objects = SceneContext.Objects;
+                        for (int i = 0; i < objects.Count; i++)
                         {
-                            _selectedObject = obj;
+                            var obj = objects[i];
+                            ImGui.PushID(i);
+                            bool isSelected = (_selectedObject == obj);
+                            if (ImGui.Selectable(obj.Name, isSelected))
+                            {
+                                _selectedObject = obj;
+                            }
+                            ImGui.PopID();
                         }
-                        ImGui.PopID();
                     }
                     
                     ImGui.TreePop();
@@ -100,23 +99,23 @@ namespace wraithspire.engine
                     {
                         if (ImGui.MenuItem("Cube"))
                         {
-                            OnCreateCube?.Invoke();
+                            SceneContext?.CreateCube();
                         }
                         if (ImGui.MenuItem("Sphere"))
                         {
-                            OnCreateSphere?.Invoke();
+                            SceneContext?.CreateSphere();
                         }
                         if (ImGui.MenuItem("Capsule"))
                         {
-                            OnCreateCapsule?.Invoke();
+                            SceneContext?.CreateCapsule();
                         }
                         if (ImGui.MenuItem("Cylinder"))
                         {
-                            OnCreateCylinder?.Invoke();
+                            SceneContext?.CreateCylinder();
                         }
                         if (ImGui.MenuItem("Plane"))
                         {
-                            OnCreatePlane?.Invoke();
+                            SceneContext?.CreatePlane();
                         }
                         ImGui.EndMenu();
                     }
