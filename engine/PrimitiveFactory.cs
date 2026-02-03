@@ -30,26 +30,80 @@ namespace wraithspire.engine
                 -0.5f, -0.5f, -0.5f,
                  0.5f, -0.5f, -0.5f,
                  0.5f,  0.5f, -0.5f,
-                -0.5f,  0.5f, -0.5f
+                -0.5f,  0.5f, -0.5f,
+                // Right face
+                 0.5f, -0.5f,  0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f,  0.5f, -0.5f,
+                 0.5f,  0.5f,  0.5f,
+                // Left face
+                -0.5f, -0.5f,  0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f,  0.5f, -0.5f,
+                -0.5f,  0.5f,  0.5f,
+                // Top face
+                -0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f, -0.5f,
+                -0.5f,  0.5f, -0.5f,
+                // Bottom face
+                -0.5f, -0.5f,  0.5f,
+                 0.5f, -0.5f,  0.5f,
+                 0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f
+            };
+
+            float[] normals = new float[]
+            {
+                // Front
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+                // Back
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f,
+                // Right
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                // Left
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+                // Top
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                // Bottom
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f
             };
 
             uint[] indices = new uint[]
             {
                 // Front
                 0, 1, 2, 0, 2, 3,
-                // Right
-                1, 5, 6, 1, 6, 2,
                 // Back
                 5, 4, 7, 5, 7, 6,
+                // Right
+                8, 9, 10, 8, 10, 11,
                 // Left
-                4, 0, 3, 4, 3, 7,
+                12, 15, 14, 12, 14, 13,
                 // Top
-                3, 2, 6, 3, 6, 7,
+                16, 17, 18, 16, 18, 19,
                 // Bottom
-                4, 5, 1, 4, 1, 0
+                20, 23, 22, 20, 22, 21
             };
 
-            return CreateGameObject(name, vertices, indices, new Vector3(0.3f, 0.6f, 0.9f));
+            return CreateGameObject(name, vertices, normals, indices, new Vector3(0.3f, 0.6f, 0.9f));
         }
 
         public static GameObject CreateSphere(string name = "Sphere", int segments = 16, int rings = 16)
@@ -58,6 +112,7 @@ namespace wraithspire.engine
 
             float radius = 0.5f;
             var verts = new List<float>();
+            var norms = new List<float>();
             var inds = new List<uint>();
 
             for (int r = 0; r <= rings; r++)
@@ -77,6 +132,10 @@ namespace wraithspire.engine
                     verts.Add(x * radius);
                     verts.Add(y * radius);
                     verts.Add(z * radius);
+
+                    norms.Add(x);
+                    norms.Add(y);
+                    norms.Add(z);
                 }
             }
 
@@ -100,14 +159,14 @@ namespace wraithspire.engine
                 }
             }
 
-            return CreateGameObject(name, verts.ToArray(), inds.ToArray(), new Vector3(0.9f, 0.4f, 0.3f));
+            return CreateGameObject(name, verts.ToArray(), norms.ToArray(), inds.ToArray(), new Vector3(0.9f, 0.4f, 0.3f));
         }
 
-        private static GameObject CreateGameObject(string name, float[] vertices, uint[] indices, Vector3 color)
+        private static GameObject CreateGameObject(string name, float[] vertices, float[] normals, uint[] indices, Vector3 color)
         {
             var go = new GameObject(name);
             var meshFilter = go.AddComponent<MeshFilter>();
-            meshFilter.Mesh = new Mesh(vertices, indices);
+            meshFilter.Mesh = new Mesh(vertices, normals, indices);
 
             var meshRenderer = go.AddComponent<MeshRenderer>();
             meshRenderer.Material = new Material(_defaultShader);

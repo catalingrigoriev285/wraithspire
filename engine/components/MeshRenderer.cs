@@ -8,13 +8,13 @@ namespace wraithspire.engine.components
     {
         public Material? Material { get; set; }
 
-        public void Render(Matrix4 view, Matrix4 projection)
+        public void Render(Matrix4 view, Matrix4 projection, Vector3 viewPos, Light light)
         {
             var meshFilter = GameObject.GetComponent<MeshFilter>();
             if (meshFilter == null || meshFilter.Mesh == null || Material == null) return;
 
             Matrix4 model = Transform.GetModelMatrix();
-            Material.Use(model, view, projection);
+            Material.Use(model, view, projection, viewPos, light);
 
             meshFilter.Mesh.Bind();
             GL.DrawElements(PrimitiveType.Triangles, meshFilter.Mesh.Indices.Length, DrawElementsType.UnsignedInt, 0);

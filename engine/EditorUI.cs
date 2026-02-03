@@ -203,6 +203,10 @@ namespace wraithspire.engine
                         {
                             activeScene?.CreateSphere();
                         }
+                        if (ImGui.MenuItem("Light"))
+                        {
+                            activeScene?.CreateLight();
+                        }
                         ImGui.EndMenu();
                     }
                     ImGui.EndPopup();
@@ -335,6 +339,26 @@ namespace wraithspire.engine
                             }
                             ImGui.TreePop();
                         }
+                    }
+
+                    var lightComp = _selectedObject.GetComponent<LightComponent>();
+                    if (lightComp != null)
+                    {
+                         if (ImGui.TreeNode("Light Component"))
+                         {
+                             var color = new System.Numerics.Vector3(lightComp.Color.X, lightComp.Color.Y, lightComp.Color.Z);
+                             if (ImGui.ColorEdit3("Color", ref color))
+                             {
+                                 lightComp.Color = new Vector3(color.X, color.Y, color.Z);
+                             }
+                             
+                             float intensity = lightComp.Intensity;
+                             if (ImGui.DragFloat("Intensity", ref intensity, 0.1f, 0f, 100f))
+                             {
+                                 lightComp.Intensity = intensity;
+                             }
+                             ImGui.TreePop();
+                         }
                     }
                 }
                 else
