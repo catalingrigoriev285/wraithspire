@@ -40,7 +40,7 @@ namespace wraithspire.engine
             // Toolbar
             ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth, topMargin), ImGuiCond.Always);
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(centerWidth, 100f), ImGuiCond.Always);
-            if (ImGui.Begin("Toolbar", ImGuiWindowFlags.None))
+            if (ImGui.Begin("Toolbar", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
             {
                 if (ImGui.Button(_isPlaying ? "Stop" : "Play"))
                 {
@@ -63,7 +63,7 @@ namespace wraithspire.engine
             // Hierarchy
             ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin), ImGuiCond.Always);
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(leftWidth, centerHeight), ImGuiCond.Always);
-            if (ImGui.Begin("Hierarchy", ImGuiWindowFlags.None))
+            if (ImGui.Begin("Hierarchy", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
             {
                 ImGui.Text("Scene Hierarchy");
                 ImGui.Separator();
@@ -128,7 +128,7 @@ namespace wraithspire.engine
             // Project
             ImGui.SetNextWindowPos(new System.Numerics.Vector2(0, topMargin + centerHeight), ImGuiCond.Always);
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(width, bottomHeight), ImGuiCond.Always);
-            if (ImGui.Begin("Project", ImGuiWindowFlags.None))
+            if (ImGui.Begin("Project", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
             {
                 ImGui.Text("Project Files");
                 ImGui.Separator();
@@ -158,7 +158,7 @@ namespace wraithspire.engine
             // Inspector
             ImGui.SetNextWindowPos(new System.Numerics.Vector2(leftWidth + centerWidth, topMargin), ImGuiCond.Always);
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(rightWidth, centerHeight), ImGuiCond.Always);
-            if (ImGui.Begin("Inspector", ImGuiWindowFlags.None))
+            if (ImGui.Begin("Inspector", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
             {
                 ImGui.Text("Inspector");
                 ImGui.Separator();

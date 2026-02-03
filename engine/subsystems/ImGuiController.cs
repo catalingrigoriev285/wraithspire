@@ -60,13 +60,13 @@ namespace wraithspire.engine.subsystems
         private static void ApplyModernStyle()
         {
             var style = ImGui.GetStyle();
-            style.WindowRounding = 8f;
-            style.FrameRounding = 6f;
-            style.PopupRounding = 6f;
-            style.ChildRounding = 6f;
-            style.ScrollbarRounding = 6f;
-            style.GrabRounding = 6f;
-            style.TabRounding = 6f;
+            style.WindowRounding = 0f;
+            style.FrameRounding = 0f;
+            style.PopupRounding = 0f;
+            style.ChildRounding = 0f;
+            style.ScrollbarRounding = 0f;
+            style.GrabRounding = 0f;
+            style.TabRounding = 0f;
 
             style.WindowBorderSize = 1f;
             style.FrameBorderSize = 1f;
