@@ -8,8 +8,14 @@ namespace wraithspire.engine
 {
     internal class Scene : IDisposable
     {
+        public string Name { get; set; }
         public List<Primitive> Objects { get; private set; } = new List<Primitive>();
         public CheckboardTerrain? Terrain { get; private set; }
+
+        public Scene(string name)
+        {
+            Name = name;
+        }
 
         private int _cubeCounter = 0;
         private int _sphereCounter = 0;

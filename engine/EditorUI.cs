@@ -15,10 +15,12 @@ namespace wraithspire.engine
         private Camera _camera = new Camera();
         private Primitive? _selectedObject = null;
 
-        public Scene? SceneContext { get; set; }
+        public SceneManager? ManagerContext { get; set; }
 
         public Matrix4 CameraView => _camera.View;
         public Matrix4 CameraProjection => _camera.Projection;
+
+        private string _newSceneName = "New Scene";
 
         public void Render(GameWindow window)
         {
@@ -60,7 +62,8 @@ namespace wraithspire.engine
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(leftWidth, centerHeight), ImGuiCond.Always);
             if (ImGui.Begin("Hierarchy", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
             {
-                ImGui.Text("Scene Hierarchy");
+                var activeScene = ManagerContext?.ActiveScene;
+                ImGui.Text(activeScene != null ? $"Hierarchy - {activeScene.Name}" : "Hierarchy");
                 ImGui.Separator();
                 if (ImGui.TreeNodeEx("Root", ImGuiTreeNodeFlags.DefaultOpen))
                 {
@@ -68,9 +71,9 @@ namespace wraithspire.engine
                     ImGui.PushID("DirectionalLight"); ImGui.BulletText("Directional Light"); ImGui.PopID();
                     
                     // Display scene objects
-                    if (SceneContext != null)
+                    if (activeScene != null)
                     {
-                        var objects = SceneContext.Objects;
+                        var objects = activeScene.Objects;
                         for (int i = 0; i < objects.Count; i++)
                         {
                             var obj = objects[i];
@@ -95,27 +98,58 @@ namespace wraithspire.engine
 
                 if (ImGui.BeginPopup("HierarchyContext"))
                 {
-                    if (ImGui.BeginMenu("Objects"))
+                    ImGui.Text("Scenes");
+                    ImGui.Separator();
+                    
+                    // Scene Creation
+                    ImGui.InputText("##NewSceneName", ref _newSceneName, 32);
+                    ImGui.SameLine();
+                    if (ImGui.Button("Create"))
+                    {
+                        ManagerContext?.CreateScene(_newSceneName);
+                    }
+
+                    // Scene Selection
+                    if (ImGui.BeginMenu("Switch To..."))
+                    {
+                        if (ManagerContext != null)
+                        {
+                            foreach (var sceneName in ManagerContext.Scenes.Keys)
+                            {
+                                bool isCurrent = ManagerContext.ActiveScene?.Name == sceneName;
+                                if (ImGui.MenuItem(sceneName, "", isCurrent))
+                                {
+                                    ManagerContext.LoadScene(sceneName);
+                                    _selectedObject = null;
+                                }
+                            }
+                        }
+                        ImGui.EndMenu();
+                    }
+
+                    ImGui.Separator();
+                    ImGui.Text("Objects");
+                    if (ImGui.BeginMenu("Create Object"))
                     {
                         if (ImGui.MenuItem("Cube"))
                         {
-                            SceneContext?.CreateCube();
+                            activeScene?.CreateCube();
                         }
                         if (ImGui.MenuItem("Sphere"))
                         {
-                            SceneContext?.CreateSphere();
+                            activeScene?.CreateSphere();
                         }
                         if (ImGui.MenuItem("Capsule"))
                         {
-                            SceneContext?.CreateCapsule();
+                            activeScene?.CreateCapsule();
                         }
                         if (ImGui.MenuItem("Cylinder"))
                         {
-                            SceneContext?.CreateCylinder();
+                            activeScene?.CreateCylinder();
                         }
                         if (ImGui.MenuItem("Plane"))
                         {
-                            SceneContext?.CreatePlane();
+                            activeScene?.CreatePlane();
                         }
                         ImGui.EndMenu();
                     }
@@ -129,25 +163,69 @@ namespace wraithspire.engine
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(width, bottomHeight), ImGuiCond.Always);
             if (ImGui.Begin("Project", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
             {
-                ImGui.Text("Project Files");
+                ImGui.Text("Project - Scenes");
+                ImGui.SameLine();
+                if (ImGui.Button("+"))
+                {
+                    ImGui.OpenPopup("CreateScenePopup");
+                }
+
+                if (ImGui.BeginPopup("CreateScenePopup"))
+                {
+                    ImGui.InputText("Name", ref _newSceneName, 32);
+                    if (ImGui.Button("Create"))
+                    {
+                        ManagerContext?.CreateScene(_newSceneName);
+                        ImGui.CloseCurrentPopup();
+                    }
+                    ImGui.EndPopup();
+                }
+
                 ImGui.Separator();
                 if (ImGui.BeginTable("ProjectTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
                 {
-                    ImGui.TableSetupColumn("Assets");
+                    ImGui.TableSetupColumn("Name");
                     ImGui.TableSetupColumn("Type");
                     ImGui.TableHeadersRow();
 
-                    ImGui.TableNextRow();
-                    ImGui.TableSetColumnIndex(0); ImGui.Text("scene.main");
-                    ImGui.TableSetColumnIndex(1); ImGui.Text("Scene");
+                    if (ManagerContext != null)
+                    {
+                        foreach (var sceneName in ManagerContext.Scenes.Keys)
+                        {
+                            ImGui.PushID(sceneName);
+                            ImGui.TableNextRow();
+                            ImGui.TableSetColumnIndex(0);
+                            
+                            bool isSelected = ManagerContext.ActiveScene?.Name == sceneName;
+                            if (ImGui.Selectable(sceneName, isSelected, ImGuiSelectableFlags.SpanAllColumns))
+                            {
+                                // Single click selects? Or maybe just highlights.
+                            }
+                            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                            {
+                                ManagerContext.LoadScene(sceneName);
+                                _selectedObject = null; // Deselect object on scene switch
+                            }
+                            
+                            // Context menu for deletion
+                            if (ImGui.BeginPopupContextItem())
+                            {
+                                if (ImGui.MenuItem("Load"))
+                                {
+                                    ManagerContext.LoadScene(sceneName);
+                                    _selectedObject = null;
+                                }
+                                if (ImGui.MenuItem("Delete"))
+                                {
+                                    ManagerContext.DeleteScene(sceneName);
+                                }
+                                ImGui.EndPopup();
+                            }
 
-                    ImGui.TableNextRow();
-                    ImGui.TableSetColumnIndex(0); ImGui.Text("textures/brick.png");
-                    ImGui.TableSetColumnIndex(1); ImGui.Text("Texture");
-
-                    ImGui.TableNextRow();
-                    ImGui.TableSetColumnIndex(0); ImGui.Text("scripts/player.cs");
-                    ImGui.TableSetColumnIndex(1); ImGui.Text("Script");
+                            ImGui.TableSetColumnIndex(1); ImGui.Text("Scene");
+                            ImGui.PopID();
+                        }
+                    }
 
                     ImGui.EndTable();
                 }

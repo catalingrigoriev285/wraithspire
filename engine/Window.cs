@@ -13,7 +13,7 @@ namespace wraithspire.engine
         private readonly GameWindow _window;
         private ImGuiController? _imgui;
         private EditorUI? _editorUI;
-        private Scene? _scene;
+        private SceneManager? _sceneManager;
         private Renderer? _renderer;
 
         public Window(int width = 1280, int height = 720, string title = "Wraithspire Engine")
@@ -45,13 +45,13 @@ namespace wraithspire.engine
             
             _imgui = new ImGuiController(_window);
             
-            _scene = new Scene();
-            _scene.Initialize();
+            _sceneManager = new SceneManager();
+            _sceneManager.Initialize();
 
             _renderer = new Renderer();
 
             _editorUI = new EditorUI();
-            _editorUI.SceneContext = _scene;
+            _editorUI.ManagerContext = _sceneManager;
         }
 
         private void OnUpdateFrame(FrameEventArgs args)
@@ -64,30 +64,15 @@ namespace wraithspire.engine
             GL.Viewport(0, 0, _window.ClientSize.X, _window.ClientSize.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (_renderer != null && _scene != null && _editorUI != null)
+            if (_renderer != null && _sceneManager != null && _sceneManager.ActiveScene != null && _editorUI != null)
             {
-                // The renderer needs view/proj from the editor/camera
-                // We should calculate the viewport for the "Game View" or "Scene View"
-                
-                // Keep the same viewport calculation logic if possible, or pass it to Renderer
-                // But Renderer.Render expects whole screen/framebuffer commands usually for now let's just use what was there
-                // Actually the previous code did a Viewport calculation.
-                
                 float width = _window.ClientSize.X;
                 float height = _window.ClientSize.Y;
-                float topMargin = 0f;
-                float leftWidth = MathF.Round(width * 0.20f);
-                float rightWidth = MathF.Round(width * 0.25f);
-                float bottomHeight = MathF.Round(height * 0.30f);
-                float centerWidth = width - leftWidth - rightWidth;
-                float centerHeight = height - bottomHeight - topMargin;
-                // int viewportWidth = (int)centerWidth;
-                // int viewportHeight = (int)(centerHeight - 100f); 
-
+                
                 var proj = _editorUI.CameraProjection;
                 var view = _editorUI.CameraView;
                 
-                _renderer.Render(_scene, view, proj);
+                _renderer.Render(_sceneManager.ActiveScene, view, proj);
             }
 
             _editorUI?.Render(_window);
@@ -104,7 +89,7 @@ namespace wraithspire.engine
         private void OnUnload()
         {
             _imgui?.Dispose();
-            _scene?.Dispose();
+            _sceneManager?.Dispose();
         }
 
         public void Run()
